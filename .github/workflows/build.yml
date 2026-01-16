@@ -25,5 +25,6 @@ jobs:
           ref: ${{ github.head_ref || github.ref }}
       - name: Build code and check formatting
         run: |
+            chmod +x ./gradlew
             ./gradlew spotlessCheck
             ./gradlew build
