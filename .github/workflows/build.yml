@@ -28,4 +28,3 @@ jobs:
             chmod +x ./gradlew
             ./gradlew spotlessCheck
             ./gradlew build
-            * text eol=lf
