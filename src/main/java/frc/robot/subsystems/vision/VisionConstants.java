@@ -18,15 +18,27 @@ public class VisionConstants {
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
   // Camera names, must match names configured on coprocessor
-  public static String camera0Name = "camera_0";
-  public static String camera1Name = "camera_1";
+  public static String cameraFRName = "ROLEY-FR_OV9281";
+  public static String cameraFLName = "ROLEY-FL_OV9281";
+  public static String cameraBRName = "ROLEY-BR_OV9281";
+  public static String cameraBLName = "ROLEY-BL_OV9281";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
-  public static Transform3d robotToCamera0 =
-      new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0));
-  public static Transform3d robotToCamera1 =
-      new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI));
+  // Cameras in 21.5" square (10.75" = 0.273m from center), 9" high (0.229m)
+  // Pitch: 20° up, Yaw: 20° outward toward corners
+  public static Transform3d robotToCameraFR =
+      new Transform3d(
+          0.273, -0.273, 0.229, new Rotation3d(0.0, Math.toRadians(20), Math.toRadians(-20)));
+  public static Transform3d robotToCameraFL =
+      new Transform3d(
+          0.273, 0.273, 0.229, new Rotation3d(0.0, Math.toRadians(20), Math.toRadians(20)));
+  public static Transform3d robotToCameraBR =
+      new Transform3d(
+          -0.273, -0.273, 0.229, new Rotation3d(0.0, Math.toRadians(20), Math.toRadians(-160)));
+  public static Transform3d robotToCameraBL =
+      new Transform3d(
+          -0.273, 0.273, 0.229, new Rotation3d(0.0, Math.toRadians(20), Math.toRadians(160)));
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;
@@ -41,8 +53,10 @@ public class VisionConstants {
   // (Adjust to trust some cameras more than others)
   public static double[] cameraStdDevFactors =
       new double[] {
-        1.0, // Camera 0
-        1.0 // Camera 1
+        1.0, // Front Right
+        1.0, // Front Left
+        1.0, // Back Right
+        1.0 // Back Left
       };
 
   // Multipliers to apply for MegaTag 2 observations

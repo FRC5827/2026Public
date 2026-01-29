@@ -67,8 +67,10 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVision(camera0Name, robotToCamera0),
-                new VisionIOPhotonVision(camera1Name, robotToCamera1));
+                new VisionIOPhotonVision(cameraFRName, robotToCameraFR),
+                new VisionIOPhotonVision(cameraFLName, robotToCameraFL),
+                new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
+                new VisionIOPhotonVision(cameraBLName, robotToCameraBL));
 
         break;
 
@@ -85,8 +87,10 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, drive::getPose));
+                new VisionIOPhotonVisionSim(cameraFRName, robotToCameraFR, drive::getPose),
+                new VisionIOPhotonVisionSim(cameraFLName, robotToCameraFL, drive::getPose),
+                new VisionIOPhotonVisionSim(cameraBRName, robotToCameraBR, drive::getPose),
+                new VisionIOPhotonVisionSim(cameraBLName, robotToCameraBL, drive::getPose));
         break;
 
       default:
@@ -98,7 +102,13 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
 
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIO() {},
+                new VisionIO() {},
+                new VisionIO() {},
+                new VisionIO() {});
 
         break;
     }
