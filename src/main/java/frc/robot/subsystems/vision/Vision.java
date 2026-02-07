@@ -18,6 +18,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
@@ -64,9 +65,14 @@ public class Vision extends SubsystemBase {
 
     @Override
     public void periodic() {
+        long visionStart = RobotController.getFPGATime();
         for (int i = 0; i < io.length; i++) {
+            long cameraStart = RobotController.getFPGATime();
             io[i].updateInputs(inputs[i]);
             Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
+            Logger.recordOutput(
+                    "PerformanceMonitor/Vision/Camera" + Integer.toString(i) + "Ms",
+                    (RobotController.getFPGATime() - cameraStart) / 1000.0);
         }
 
         // Initialize logging values
@@ -171,6 +177,11 @@ public class Vision extends SubsystemBase {
                 "Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(new Pose3d[0]));
         Logger.recordOutput(
                 "Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(new Pose3d[0]));
+
+        // Log total vision processing time
+        Logger.recordOutput(
+                "PerformanceMonitor/Vision/TotalMs",
+                (RobotController.getFPGATime() - visionStart) / 1000.0);
     }
 
     @FunctionalInterface

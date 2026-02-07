@@ -42,6 +42,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -172,6 +173,8 @@ public class Drive extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Time CAN refresh + input processing (under lock)
+        long canRefreshStart = RobotController.getFPGATime();
         odometryLock.lock(); // Prevents odometry updates while reading data
         gyroIO.updateInputs(gyroInputs);
         Logger.processInputs("Drive/Gyro", gyroInputs);
@@ -179,6 +182,7 @@ public class Drive extends SubsystemBase {
             module.periodic();
         }
         odometryLock.unlock();
+        long canRefreshEnd = RobotController.getFPGATime();
 
         // Stop moving when disabled
         if (DriverStation.isDisabled()) {
@@ -194,6 +198,7 @@ public class Drive extends SubsystemBase {
         }
 
         // Update odometry
+        long odometryStart = RobotController.getFPGATime();
         double[] sampleTimestamps =
                 modules[0].getOdometryTimestamps(); // All signals are sampled together
         int sampleCount = sampleTimestamps.length;
@@ -224,6 +229,15 @@ public class Drive extends SubsystemBase {
             // Apply update
             poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
         }
+        long odometryEnd = RobotController.getFPGATime();
+
+        // Log performance metrics
+        Logger.recordOutput(
+                "PerformanceMonitor/Drive/CANRefreshMs",
+                (canRefreshEnd - canRefreshStart) / 1000.0);
+        Logger.recordOutput(
+                "PerformanceMonitor/Drive/OdometryMs", (odometryEnd - odometryStart) / 1000.0);
+        Logger.recordOutput("PerformanceMonitor/Drive/OdometrySampleCount", sampleCount);
 
         // Update gyro alert
         gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
