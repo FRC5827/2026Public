@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Filesystem;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -343,7 +344,10 @@ public class FieldConstants {
                 synchronized (this) {
                     if (layout == null) {
                         try {
-                            Path p = Path.of("src", "main", "deploy", "apriltags", name + ".json");
+                            Path p =
+                                    Filesystem.getDeployDirectory()
+                                            .toPath()
+                                            .resolve("apriltags/" + name + ".json");
                             layout = new AprilTagFieldLayout(p);
                             layoutString = new ObjectMapper().writeValueAsString(layout);
                         } catch (IOException e) {

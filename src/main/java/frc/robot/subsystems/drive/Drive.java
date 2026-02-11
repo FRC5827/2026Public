@@ -14,10 +14,7 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
@@ -29,6 +26,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -44,17 +42,22 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.FieldConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -77,6 +80,8 @@ public class Drive extends SubsystemBase {
                             Math.hypot(
                                     TunerConstants.BackRight.LocationX,
                                     TunerConstants.BackRight.LocationY)));
+    public static final LoggedTunableNumber shootingOffset =
+            new LoggedTunableNumber("Drive/ShootingOffset", 2.0); // Meters
 
     // PathPlanner config constants
     private static final double ROBOT_MASS_KG = 74.088;
@@ -398,20 +403,27 @@ public class Drive extends SubsystemBase {
     }
 
     public Command goToPoint(Pose2d target) {
-        Pose2d startingPose = getPose();
-        var path =
-                new PathPlannerPath(
-                        PathPlannerPath.waypointsFromPoses(
-                                new Pose2d(startingPose.getTranslation(), target.getRotation()),
-                                target),
-                        new PathConstraints(
-                                1.0, 1.0, Units.degreesToRadians(180), Units.degreesToRadians(360)),
-                        new IdealStartingState(1.0, target.getRotation()),
-                        new GoalEndState(0.0, target.getRotation()));
-
         PathConstraints constraints =
                 new PathConstraints(
                         1.5, 1.5, Units.degreesToRadians(180), Units.degreesToRadians(360));
-        return AutoBuilder.pathfindThenFollowPath(path, constraints);
+        return AutoBuilder.pathfindToPose(target, constraints);
+    }
+
+    public Command alignToHub() {
+        // pathfindToPose does not auto-flip, so select the correct hub per alliance
+        return Commands.defer(
+                () -> {
+                    boolean flip = AllianceFlipUtil.shouldFlip();
+                    Translation3d hub =
+                            flip
+                                    ? FieldConstants.Hub.oppTopCenterPoint
+                                    : FieldConstants.Hub.topCenterPoint;
+                    double offset = flip ? shootingOffset.get() : -shootingOffset.get();
+                    Translation2d shootingPos = new Translation2d(hub.getX() + offset, hub.getY());
+                    Translation2d hubCenter = new Translation2d(hub.getX(), hub.getY());
+                    Rotation2d facing = hubCenter.minus(shootingPos).getAngle();
+                    return goToPoint(new Pose2d(shootingPos, facing));
+                },
+                Set.of(this));
     }
 }

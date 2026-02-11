@@ -87,17 +87,28 @@ public class RobotContainer {
                                 new ModuleIOSim(TunerConstants.BackLeft),
                                 new ModuleIOSim(TunerConstants.BackRight));
 
-                vision =
-                        new Vision(
-                                drive::addVisionMeasurement,
-                                new VisionIOPhotonVisionSim(
-                                        cameraFRName, robotToCameraFR, drive::getPose),
-                                new VisionIOPhotonVisionSim(
-                                        cameraFLName, robotToCameraFL, drive::getPose),
-                                new VisionIOPhotonVisionSim(
-                                        cameraBRName, robotToCameraBR, drive::getPose),
-                                new VisionIOPhotonVisionSim(
-                                        cameraBLName, robotToCameraBL, drive::getPose));
+                if (Constants.simWithVision) {
+                    vision =
+                            new Vision(
+                                    drive::addVisionMeasurement,
+                                    new VisionIOPhotonVisionSim(
+                                            cameraFRName, robotToCameraFR, drive::getPose),
+                                    new VisionIOPhotonVisionSim(
+                                            cameraFLName, robotToCameraFL, drive::getPose),
+                                    new VisionIOPhotonVisionSim(
+                                            cameraBRName, robotToCameraBR, drive::getPose),
+                                    new VisionIOPhotonVisionSim(
+                                            cameraBLName, robotToCameraBL, drive::getPose));
+                } else {
+                    vision =
+                            new Vision(
+                                    drive::addVisionMeasurement,
+                                    new VisionIO() {},
+                                    new VisionIO() {},
+                                    new VisionIO() {},
+                                    new VisionIO() {});
+                }
+
                 break;
 
             default:
@@ -122,6 +133,7 @@ public class RobotContainer {
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+        autoChooser.addDefaultOption("Test Align to Hub", drive.alignToHub());
 
         // Set up SysId routines
         autoChooser.addOption(
@@ -175,7 +187,7 @@ public class RobotContainer {
         // Switch to X pattern when X button is pressed
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        // Reset gyro to 0° when B button is pressed
+        // Reset gyro to 0° when B button is pressed
         controller
                 .b()
                 .onTrue(
@@ -187,6 +199,9 @@ public class RobotContainer {
                                                                 Rotation2d.kZero)),
                                         drive)
                                 .ignoringDisable(true));
+
+        // Align to hub when Y button is held
+        controller.y().whileTrue(drive.alignToHub());
     }
 
     /**
