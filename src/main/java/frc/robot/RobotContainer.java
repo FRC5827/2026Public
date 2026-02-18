@@ -28,6 +28,10 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOReal;
+import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
@@ -45,6 +49,7 @@ public class RobotContainer {
     // Subsystems
     private final Vision vision;
     private final Drive drive;
+    private final Shooter shooter;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -74,6 +79,8 @@ public class RobotContainer {
                                 new VisionIOPhotonVision(cameraFLName, robotToCameraFL),
                                 new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
                                 new VisionIOPhotonVision(cameraBLName, robotToCameraBL));
+
+                shooter = new Shooter(new ShooterIOReal(), () -> drive.getPose());
 
                 break;
 
@@ -108,6 +115,7 @@ public class RobotContainer {
                                     new VisionIO() {},
                                     new VisionIO() {});
                 }
+                shooter = new Shooter(new ShooterIOSim(), () -> drive.getPose());
 
                 break;
 
@@ -127,6 +135,8 @@ public class RobotContainer {
                                 new VisionIO() {},
                                 new VisionIO() {},
                                 new VisionIO() {});
+
+                shooter = new Shooter(new ShooterIO() {}, () -> drive.getPose());
 
                 break;
         }
@@ -187,7 +197,26 @@ public class RobotContainer {
         // Switch to X pattern when X button is pressed
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        // Reset gyro to 0° when B button is pressed
+        controller
+                .y()
+                .onTrue(shooter.startAimingAtHub())
+                .onTrue(shooter.startShootingAtHub())
+                .onFalse(shooter.stopShootingAtHub())
+                .onFalse(shooter.stopAimingAtHub());
+
+        // Manual pitch: bumpers raise/lower shooter
+        controller.rightBumper().whileTrue(shooter.raiseShooter());
+        controller.leftBumper().whileTrue(shooter.lowerShooter());
+
+        // Manual yaw: triggers rotate turret
+        controller
+                .rightTrigger(0.1)
+                .whileTrue(shooter.runTurretYaw(() -> controller.getRightTriggerAxis()));
+        controller
+                .leftTrigger(0.1)
+                .whileTrue(shooter.runTurretYaw(() -> -controller.getLeftTriggerAxis()));
+
+        // Reset gyro to 0° when B button is pressed
         controller
                 .b()
                 .onTrue(
@@ -200,8 +229,8 @@ public class RobotContainer {
                                         drive)
                                 .ignoringDisable(true));
 
-        // Align to hub when Y button is held
-        controller.y().whileTrue(drive.alignToHub());
+        // // Align to hub when Y button is held
+        // controller.y().whileTrue(drive.alignToHub());
     }
 
     /**

@@ -37,6 +37,10 @@ public class FieldConstants {
             AprilTagLayoutType.OFFICIAL.getLayout().getFieldLength();
     public static final double fieldWidth = AprilTagLayoutType.OFFICIAL.getLayout().getFieldWidth();
 
+    public static class PhysicalConstants {
+        public static final double GRAVITY = 9.81;
+    }
+
     /**
      * Officially defined and relevant vertical lines found on the field (defined by X-axis offset)
      */

@@ -16,8 +16,9 @@ import edu.wpi.first.wpilibj.RobotBase;
  */
 public final class Constants {
     public static final Mode simMode = Mode.SIM;
-    public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
     public static final boolean tuningMode = false;
+
+    public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
     public static final boolean simWithVision = false;
 
     public static enum Mode {
@@ -30,4 +31,9 @@ public final class Constants {
         /** Replaying from a log file. */
         REPLAY
     }
+
+    public static int shooterFiringMotorOpenCanbus_ID = 16;
+    public static int shooterFiringMotorFollowerOpenCanbus_ID = 17;
+    public static int shooterYawMotorCanbus_ID = 18;
+    public static int yawLimitSwitchDIO = 0;
 }

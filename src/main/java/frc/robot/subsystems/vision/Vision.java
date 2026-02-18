@@ -63,6 +63,16 @@ public class Vision extends SubsystemBase {
         return inputs[cameraIndex].latestTargetObservation.tx();
     }
 
+    /** Returns whether the specified camera currently sees at least one AprilTag. */
+    public boolean hasTarget(int cameraIndex) {
+        return inputs[cameraIndex].tagIds.length > 0;
+    }
+
+    /** Returns the number of cameras. */
+    public int getNumCameras() {
+        return io.length;
+    }
+
     @Override
     public void periodic() {
         long visionStart = RobotController.getFPGATime();
