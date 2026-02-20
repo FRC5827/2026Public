@@ -35,8 +35,8 @@ public class Shooter extends SubsystemBase {
     private static final LoggedTunableNumber pitchMaxRad =
             new LoggedTunableNumber("Shooter/pitchMaxRad", Math.PI / 4.0);
 
-    private boolean aimingAtHub =
-            false; // whether we are currently trying to aim at the hub (used for aiming command)
+    private boolean tryToAimAtHub = false;
+    // whether we are currently trying to aim at the hub (used for aiming command)
 
     private final Supplier<Pose2d> robotPose;
     private static final LoggedTunableNumber maxShootingSpeed = // RPM
@@ -71,8 +71,17 @@ public class Shooter extends SubsystemBase {
             new LoggedTunableNumber("Shooter/yawMotorRotationsPerTurretRotation", 46.0);
     private static final LoggedTunableNumber yawZeroOffsetDeg =
             new LoggedTunableNumber("Shooter/yawZeroOffsetDeg", 90.0);
+    private static final LoggedTunableNumber acceptableYawDeviation =
+            new LoggedTunableNumber("Shooter/acceptableYawDeviation", 1);
+    // how far off we can be from the target yaw ROTATIONS in either direction and still be "aimed"
+    private static final LoggedTunableNumber acceptablePitchDeviation =
+            new LoggedTunableNumber("Shooter/acceptablePitchDeviation", 0);
+    // TODO fix pitch stuff later, currently 0 since we're only doing yaw tracking for the hub
 
     private double targetActuatorPosition = 0.5;
+    private double targetYawPosition = 0.5;
+
+    private boolean fireWhenAimed = false; // whether to fire automatically when aimed at the hub
     private boolean wasZeroed = false;
     private boolean yawCommandedThisCycle = false;
 
@@ -101,35 +110,52 @@ public class Shooter extends SubsystemBase {
         }
         yawCommandedThisCycle = false;
 
-        if (aimingAtHub) aimAtHub();
+        if (tryToAimAtHub) aimAtHub();
+
+        if (isAimedAtHub() && fireWhenAimed) {
+            io.setTurretTargetFiringVelocity(targetFlywheelRadsPerSecond.get());
+        } else {
+            io.setTurretTargetFiringVelocity(0);
+        }
 
         Logger.processInputs("shooter", inputs);
         Logger.recordOutput("Shooter/targetActuatorPosition", targetActuatorPosition);
+        Logger.recordOutput("Shooter/targetYawPosition", targetYawPosition);
         Logger.recordOutput("Shooter/yawEncoderZeroed", inputs.yawEncoderZeroed);
-        Logger.recordOutput("Shooter/aimingAtHub", aimingAtHub);
+        Logger.recordOutput("Shooter/aimingAtHub", tryToAimAtHub);
         Logger.recordOutput("Shooter/yawZeroed", inputs.yawEncoderZeroed);
         Logger.recordOutput("PeriodicTime/Shooter", (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 
     public Command lowerForTrench() {
-        aimingAtHub = false;
+
         return Commands.runOnce(
-                () -> io.setTurretPitchPosition(shooterTrenchPitchPosition.get()), this);
+                () -> {
+                    io.setTurretPitchPosition(shooterTrenchPitchPosition.get());
+                    tryToAimAtHub = false;
+                },
+                this);
     }
 
     public Command startShootingAtHub() {
         return this.runOnce(
-                () -> io.setTurretTargetFiringVelocity(targetFlywheelRadsPerSecond.get()));
+                () -> {
+                    fireWhenAimed = true;
+                });
     }
 
     public Command stopShootingAtHub() {
-        return this.runOnce(() -> io.setTurretTargetFiringVelocity(0));
+        return this.runOnce(
+                () -> {
+                    fireWhenAimed = false;
+                    io.setTurretTargetFiringVelocity(0);
+                });
     }
 
     public Command startAimingAtHub() {
         return Commands.runOnce(
                 () -> {
-                    aimingAtHub = true;
+                    tryToAimAtHub = true;
                 },
                 this);
     }
@@ -137,7 +163,7 @@ public class Shooter extends SubsystemBase {
     public Command stopAimingAtHub() {
         return Commands.runOnce(
                 () -> {
-                    aimingAtHub = false;
+                    tryToAimAtHub = false;
                 },
                 this);
     }
@@ -154,8 +180,15 @@ public class Shooter extends SubsystemBase {
 
     private void aimAtHub() {
         // Get hub position, flipped for alliance
+
+        boolean shouldFlip = AllianceFlipUtil.shouldFlip();
+        if (robotPose.get().getX() > FieldConstants.LinesVertical.neutralZoneNear
+                && robotPose.get().getX() < FieldConstants.LinesVertical.neutralZoneFar) {
+            return; // don't aim if we're in the neutral zone
+        }
+
         Translation3d hubTranslation =
-                !AllianceFlipUtil.shouldFlip()
+                !shouldFlip
                         ? FieldConstants.Hub.topCenterPoint
                         : FieldConstants.Hub.oppTopCenterPoint;
 
@@ -185,8 +218,9 @@ public class Shooter extends SubsystemBase {
             targetPitch = solveForPitch(muzzleSpeed, horizDist, vertDist); */
 
             io.setActuatorPosition(targetPitch);
+            Logger.recordOutput("Shooter/aimAtHubError", false);
         } else {
-            System.err.println("Shooter/aimingError: Cannot solve for pitch with given parameters");
+            Logger.recordOutput("Shooter/aimAtHubError", true);
         }
 
         Rotation2d bearing = hubTranslation.toTranslation2d().minus(shooterTranslation).getAngle();
@@ -196,21 +230,19 @@ public class Shooter extends SubsystemBase {
 
         // Convert body-relative angle to target motor rotations
         double gearRatio = yawMotorRotationsPerTurretRotation.get();
-        double targetMotorRotations =
+        double targetYawPosition =
                 robotRelativeAngle
                                 .plus(Rotation2d.fromDegrees(yawZeroOffsetDeg.get()))
                                 .getRotations()
                         * gearRatio;
 
         // Clamp target to soft limits
-        targetMotorRotations =
-                Math.max(
-                        yawMinRotations.get(),
-                        Math.min(yawMaxRotations.get(), targetMotorRotations));
+        targetYawPosition =
+                Math.max(yawMinRotations.get(), Math.min(yawMaxRotations.get(), targetYawPosition));
 
         // P control on motor position error
-        double positionError = targetMotorRotations - inputs.shooterPositionYaw;
-        Logger.recordOutput("Shooter/yawTargetMotorRot", targetMotorRotations);
+        double positionError = targetYawPosition - inputs.shooterPositionYaw;
+        Logger.recordOutput("Shooter/yawTargetMotorRot", targetYawPosition);
         Logger.recordOutput("Shooter/yawPositionError", positionError);
 
         if (Math.abs(positionError) > yawTrackingDeadband.get()) {
@@ -222,6 +254,15 @@ public class Shooter extends SubsystemBase {
 
         // Command flywheel after pitch is set so angle is correct before motor spins up
         io.setTurretTargetFiringVelocity(targetFlywheelRadsPerSecond.get());
+    }
+
+    private boolean isAimedAtHub() {
+        if (!tryToAimAtHub) return false;
+        // Check if yaw and pitch are within acceptable deviation
+        double yawError = Math.abs(inputs.shooterPositionYaw - targetYawPosition);
+        double pitchError = Math.abs(inputs.shooterPositionPitch - targetActuatorPosition);
+        return yawError <= acceptableYawDeviation.get()
+                && pitchError <= acceptablePitchDeviation.get();
     }
 
     private double solveForPitch(double muzzleSpeed, double horizDist, double vertDist) {
