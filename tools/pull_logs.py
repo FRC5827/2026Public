@@ -25,6 +25,7 @@ import sys
 import os
 import argparse
 import re
+import shutil
 from datetime import datetime, timedelta, timezone
 
 # ---- Configuration ----
@@ -37,6 +38,7 @@ ROBORIO_HOSTS = [
 ]
 REMOTE_LOG_DIR = "/U/logs"
 LOCAL_LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
+LATEST_DIR = os.path.join(LOCAL_LOG_DIR, "latest")
 
 # Known DS log locations (searched in order)
 DS_LOG_DIRS = [
@@ -335,6 +337,9 @@ def do_pull(host, force_all=False, cleanup=True, keep_recent=DEFAULT_KEEP_RECENT
     # Refresh local file list after downloads
     local_files = set(os.listdir(LOCAL_LOG_DIR)) if os.path.exists(LOCAL_LOG_DIR) else set()
 
+    # Update logs/latest/ with the newest log set if anything was downloaded
+    update_latest_dir(downloaded)
+
     # Cleanup phase
     if not cleanup:
         print("\nSkipping USB cleanup (--no-cleanup).")
@@ -386,6 +391,56 @@ def do_pull(host, force_all=False, cleanup=True, keep_recent=DEFAULT_KEEP_RECENT
     freed_mb = freed / (1024 * 1024)
     print(f"  Freed {freed_mb:.0f} MB ({deleted_count} file(s) deleted)")
     print(f"  Estimated free space: {free_mb + freed_mb:.0f} MB")
+
+
+def update_latest_dir(downloaded_filenames):
+    """Copy the most recent log set into logs/latest/ when new logs are downloaded.
+
+    Copies the newest .wpilog plus its matched .dslog and .dsevents (if found)
+    into LATEST_DIR, first clearing any existing files there.
+    Only runs when at least one new wpilog was downloaded this session.
+    """
+    if not downloaded_filenames:
+        return
+
+    # Find the most recent wpilog across all local files (filename sorts chronologically)
+    local_wpilogs = sorted(
+        f for f in os.listdir(LOCAL_LOG_DIR) if f.endswith(".wpilog")
+    )
+    if not local_wpilogs:
+        return
+    latest_wpilog = local_wpilogs[-1]
+
+    # Match to a DS log by timestamp
+    matches = match_logs([latest_wpilog])
+
+    # Clear and recreate the latest directory
+    if os.path.exists(LATEST_DIR):
+        shutil.rmtree(LATEST_DIR)
+    os.makedirs(LATEST_DIR)
+
+    # Copy the wpilog
+    shutil.copy2(
+        os.path.join(LOCAL_LOG_DIR, latest_wpilog),
+        os.path.join(LATEST_DIR, latest_wpilog),
+    )
+    print(f"\nUpdated logs/latest/ -> {latest_wpilog}")
+
+    if latest_wpilog in matches:
+        dslog_name, dslog_path, delta = matches[latest_wpilog]
+
+        # Copy .dslog
+        shutil.copy2(dslog_path, os.path.join(LATEST_DIR, dslog_name))
+        print(f"  + {dslog_name}  (timestamp offset {delta:.0f}s)")
+
+        # Copy .dsevents with the same base name if it exists
+        dsevents_name = os.path.splitext(dslog_name)[0] + ".dsevents"
+        dsevents_path = os.path.join(os.path.dirname(dslog_path), dsevents_name)
+        if os.path.exists(dsevents_path):
+            shutil.copy2(dsevents_path, os.path.join(LATEST_DIR, dsevents_name))
+            print(f"  + {dsevents_name}")
+    else:
+        print("  (no matching DS log found — only wpilog copied)")
 
 
 def main():

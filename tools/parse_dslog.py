@@ -151,12 +151,16 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         dslog_path = sys.argv[1]
     else:
-        # Default: find first .dslog in parent directory
-        search_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        dslog_files = [f for f in os.listdir(search_dir) if f.endswith('.dslog')]
-        if dslog_files:
-            dslog_path = os.path.join(search_dir, dslog_files[0])
-            print(f'Auto-detected: {dslog_path}')
+        # Default: find .dslog in logs/latest/, then fall back to parent directory
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for search_dir in [os.path.join(repo_root, 'logs', 'latest'), repo_root]:
+            if not os.path.isdir(search_dir):
+                continue
+            dslog_files = sorted(f for f in os.listdir(search_dir) if f.endswith('.dslog'))
+            if dslog_files:
+                dslog_path = os.path.join(search_dir, dslog_files[-1])
+                print(f'Auto-detected: {dslog_path}')
+                break
         else:
             print('Usage: python parse_dslog.py <path_to_dslog_file>')
             sys.exit(1)
