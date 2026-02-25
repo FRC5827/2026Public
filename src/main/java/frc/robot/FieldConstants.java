@@ -129,6 +129,12 @@ public class FieldConstants {
                                 + width / 2.0,
                         fieldWidth / 2.0,
                         height);
+        public static final Translation3d oppInnerCenterPoint =
+                new Translation3d(
+                        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(4).get().getX()
+                                + width / 2.0,
+                        fieldWidth / 2.0,
+                        innerHeight);
         public static final Translation2d oppNearLeftCorner =
                 new Translation2d(
                         oppTopCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);

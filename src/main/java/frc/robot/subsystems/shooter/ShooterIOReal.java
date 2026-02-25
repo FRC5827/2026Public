@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -24,234 +25,214 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Servo;
 
 import frc.robot.Constants;
-import frc.robot.generated.TunerConstants;
 import frc.robot.util.PhoenixUtil;
 
-import org.littletonrobotics.junction.Logger;
-
 public class ShooterIOReal implements ShooterIO {
-    private static final double CURRENT_LIMIT = 40.0; // amps
+    private static final double CURRENT_LIMIT = 40.0;
 
-    private final TalonFX firingMotor, firingMotorFollower;
+    private final TalonFXConfiguration flywheelConfig;
+    private final TalonFX flywheelMotor, flywheelMotorFollower;
+    private final Servo pitchServo1, pitchServo2;
+
+    private final TalonFXConfiguration yawConfig;
     private final TalonFX yawMotor;
-    private final Servo actuatorLeft, actuatorRight;
     private final DigitalInput yawLimitSwitch;
-    private final TalonFXConfiguration config;
 
-    private boolean yawZeroed = false;
+    private final StatusSignal<Voltage> flywheelMotorVoltage;
+    private final StatusSignal<Voltage> flywheelMotorVoltageFollower;
+    private final StatusSignal<Current> flywheelMotorCurrent;
+    private final StatusSignal<Current> flywheelMotorCurrentFollower;
+    private final StatusSignal<Temperature> flywheelMotorTemp;
+    private final StatusSignal<Temperature> flywheelMotorTempFollower;
+    private final StatusSignal<AngularVelocity> flywheelMotorVelocity;
 
-    private StatusSignal<AngularVelocity> firingAngularVelocity;
+    private final StatusSignal<Voltage> yawMotorVoltage;
+    private final StatusSignal<Current> yawMotorCurrent;
+    private final StatusSignal<Temperature> yawMotorTemperature;
+    private final StatusSignal<Angle> yawMotorPosition;
 
-    private StatusSignal<Voltage> firingMotorVoltage;
-    private StatusSignal<Voltage> firingMotorFollowerVoltage;
-
-    private StatusSignal<Current> firingMotorCurrentAmps;
-    private StatusSignal<Current> firingMotorFollowerCurrentAmps;
-
-    private StatusSignal<Temperature> firingMotorTemperature;
-    private StatusSignal<Temperature> firingMotorFollowerTemperature;
-
-    private StatusSignal<Voltage> yawMotorVoltage;
-    private StatusSignal<Current> yawMotorCurrentAmps;
-    private StatusSignal<Temperature> yawMotorTemperature;
-    private StatusSignal<Angle> yawMotorPosition;
-
-    private final VoltageOut firingVoltageOut = new VoltageOut(0.0);
-    private final VoltageOut yawVoltageOut = new VoltageOut(0.0);
-    private final PositionVoltage yawPositionRequest = new PositionVoltage(0.0);
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
-
-    private double actuatorPosition = 0.0;
+    private final VoltageOut voltageRequest = new VoltageOut(0);
+    private final PositionVoltage positionRequest = new PositionVoltage(0);
+    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
     public ShooterIOReal() {
-        firingMotor =
-                new TalonFX(Constants.shooterFiringMotorOpenCanbus_ID, TunerConstants.kCANBus);
-        firingMotorFollower =
+        flywheelMotor =
+                new TalonFX(Constants.shooterFlywheelMotorCanbus_ID, Constants.shooterCANBus);
+        flywheelMotorFollower =
                 new TalonFX(
-                        Constants.shooterFiringMotorFollowerOpenCanbus_ID, TunerConstants.kCANBus);
-        yawMotor = new TalonFX(Constants.shooterYawMotorCanbus_ID, TunerConstants.kCANBus);
+                        Constants.shooterFlywheelMotorFollowerCanbus_ID, Constants.shooterCANBus);
+        flywheelMotorFollower.setControl(
+                new Follower(flywheelMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
-        actuatorLeft = new Servo(0);
-        actuatorRight = new Servo(1);
+        flywheelConfig = new TalonFXConfiguration();
+        flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        flywheelConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
+        flywheelConfig.Feedback.SensorToMechanismRatio = Shooter.FLYWHEEL_GEAR_RATIO;
+        flywheelConfig.Slot0.kP = Shooter.flywheelKP.get();
+        flywheelConfig.Slot0.kD = Shooter.flywheelKD.get();
 
-        yawLimitSwitch = new DigitalInput(Constants.yawLimitSwitchDIO);
+        PhoenixUtil.tryUntilOk(
+                5, () -> flywheelMotor.getConfigurator().apply(flywheelConfig, 0.25));
+        PhoenixUtil.tryUntilOk(
+                5, () -> flywheelMotorFollower.getConfigurator().apply(flywheelConfig, 0.25));
 
-        firingMotorFollower.setControl(
-                new Follower(firingMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        pitchServo1 = new Servo(Constants.shooterPitchServo1PWM_ID);
+        pitchServo2 = new Servo(Constants.shooterPitchServo2PWM_ID);
+        pitchServo1.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
+        pitchServo2.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
 
-        config = new TalonFXConfiguration();
+        yawMotor = new TalonFX(Constants.shooterYawMotorCanbus_ID, Constants.shooterCANBus);
+        yawLimitSwitch = new DigitalInput(Constants.shooterYawLimitSwitchDIO);
 
-        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
-
-        config.Slot0.kP = Shooter.firingMotorP.getAsDouble();
-        config.Slot0.kD = Shooter.firingMotorD.getAsDouble();
-
-        PhoenixUtil.tryUntilOk(5, () -> firingMotor.getConfigurator().apply(config, 0.25));
-        PhoenixUtil.tryUntilOk(5, () -> firingMotorFollower.getConfigurator().apply(config, 0.25));
-
-        TalonFXConfiguration yawConfig = new TalonFXConfiguration();
+        yawConfig = new TalonFXConfiguration();
         yawConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         yawConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         yawConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
-        yawConfig.Slot0.kP = Shooter.yawMotorP.getAsDouble();
-        yawConfig.Slot0.kD = Shooter.yawMotorD.getAsDouble();
+        yawConfig.Feedback.SensorToMechanismRatio = Shooter.YAW_GEAR_RATIO;
+        yawConfig.Slot0.kP = Shooter.yawKP.getAsDouble();
+        yawConfig.Slot0.kD = Shooter.yawKD.getAsDouble();
         yawConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         yawConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Shooter.yawMinRotations.get();
         yawConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         yawConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Shooter.yawMaxRotations.get();
         PhoenixUtil.tryUntilOk(5, () -> yawMotor.getConfigurator().apply(yawConfig, 0.25));
 
-        this.firingAngularVelocity = firingMotor.getVelocity();
+        flywheelMotorVoltage = flywheelMotor.getMotorVoltage();
+        flywheelMotorVoltageFollower = flywheelMotorFollower.getMotorVoltage();
+        flywheelMotorCurrent = flywheelMotor.getSupplyCurrent();
+        flywheelMotorCurrentFollower = flywheelMotorFollower.getSupplyCurrent();
+        flywheelMotorTemp = flywheelMotor.getDeviceTemp();
+        flywheelMotorTempFollower = flywheelMotorFollower.getDeviceTemp();
+        flywheelMotorVelocity = flywheelMotor.getVelocity();
 
-        this.firingMotorVoltage = firingMotor.getMotorVoltage();
-        this.firingMotorFollowerVoltage = firingMotorFollower.getMotorVoltage();
-
-        this.firingMotorCurrentAmps = firingMotor.getSupplyCurrent();
-        this.firingMotorFollowerCurrentAmps = firingMotorFollower.getSupplyCurrent();
-
-        this.firingMotorTemperature = firingMotor.getDeviceTemp();
-        this.firingMotorFollowerTemperature = firingMotorFollower.getDeviceTemp();
-
-        this.yawMotorVoltage = yawMotor.getMotorVoltage();
-        this.yawMotorCurrentAmps = yawMotor.getSupplyCurrent();
-        this.yawMotorTemperature = yawMotor.getDeviceTemp();
-        this.yawMotorPosition = yawMotor.getPosition();
+        yawMotorVoltage = yawMotor.getMotorVoltage();
+        yawMotorCurrent = yawMotor.getSupplyCurrent();
+        yawMotorTemperature = yawMotor.getDeviceTemp();
+        yawMotorPosition = yawMotor.getPosition();
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
-                firingAngularVelocity,
-                firingMotorVoltage,
-                firingMotorFollowerVoltage,
-                firingMotorCurrentAmps,
-                firingMotorFollowerCurrentAmps,
-                firingMotorTemperature,
-                firingMotorFollowerTemperature,
+                flywheelMotorVoltage,
+                flywheelMotorVoltageFollower,
+                flywheelMotorCurrent,
+                flywheelMotorCurrentFollower,
+                flywheelMotorTemp,
+                flywheelMotorTempFollower,
+                flywheelMotorVelocity,
                 yawMotorVoltage,
-                yawMotorCurrentAmps,
+                yawMotorCurrent,
                 yawMotorTemperature,
                 yawMotorPosition);
 
-        ParentDevice.optimizeBusUtilizationForAll(firingMotor);
-        ParentDevice.optimizeBusUtilizationForAll(firingMotorFollower);
-        ParentDevice.optimizeBusUtilizationForAll(yawMotor);
+        ParentDevice.optimizeBusUtilizationForAll(flywheelMotor, flywheelMotorFollower, yawMotor);
     }
 
     @Override
     public void updateInputs(ShooterIOInputs inputs) {
-        var shooterStatus =
+        var flywheelStatus =
                 BaseStatusSignal.refreshAll(
-                        firingAngularVelocity,
-                        firingMotorVoltage,
-                        firingMotorFollowerVoltage,
-                        firingMotorCurrentAmps,
-                        firingMotorFollowerCurrentAmps,
-                        firingMotorTemperature,
-                        firingMotorFollowerTemperature,
-                        yawMotorVoltage,
-                        yawMotorCurrentAmps,
-                        yawMotorTemperature,
-                        yawMotorPosition);
-        inputs.shooterConnected = shooterStatus.isOK();
+                        flywheelMotorVoltage,
+                        flywheelMotorVoltageFollower,
+                        flywheelMotorCurrent,
+                        flywheelMotorCurrentFollower,
+                        flywheelMotorTemp,
+                        flywheelMotorTempFollower,
+                        flywheelMotorVelocity);
 
-        // Firing motor telemetry
-        inputs.firingAngularVelocityRPS = firingAngularVelocity.getValue().in(RadiansPerSecond);
-        inputs.firingMotorAppliedVolts = firingMotorVoltage.getValueAsDouble();
-        inputs.firingMotorFollowerAppliedVolts = firingMotorFollowerVoltage.getValueAsDouble();
-        inputs.firingMotorCurrentAmps = firingMotorCurrentAmps.getValueAsDouble();
-        inputs.firingMotorFollowerCurrentAmps = firingMotorFollowerCurrentAmps.getValueAsDouble();
-        inputs.firingMotorTemperature = firingMotorTemperature.getValueAsDouble();
-        inputs.firingMotorFollowerTemperature = firingMotorFollowerTemperature.getValueAsDouble();
+        inputs.flywheelConnected = flywheelStatus.isOK();
+        inputs.flywheelMotorVoltage = flywheelMotorVoltage.getValueAsDouble();
+        inputs.flywheelMotorVoltageFollower = flywheelMotorVoltageFollower.getValueAsDouble();
+        inputs.flywheelMotorCurrent = flywheelMotorCurrent.getValueAsDouble();
+        inputs.flywheelMotorCurrentFollower = flywheelMotorCurrentFollower.getValueAsDouble();
+        inputs.flywheelMotorTemp = flywheelMotorTemp.getValueAsDouble();
+        inputs.flywheelMotorTempFollower = flywheelMotorTempFollower.getValueAsDouble();
+        inputs.flywheelMotorVelocityMPS =
+                flywheelMotorVelocity.getValue().in(RadiansPerSecond)
+                        * Shooter.FLYWHEEL_RADIUS_METERS
+                        / 2;
+        // divide by 2 because only 1 side of ball is controlled by motor
 
-        // Yaw motor telemetry
-        inputs.yawControlMotorAppliedVolts = yawMotorVoltage.getValueAsDouble();
-        inputs.yawControlMotorCurrentAmps = yawMotorCurrentAmps.getValueAsDouble();
-        inputs.yawControlMotorTemperature = yawMotorTemperature.getValueAsDouble();
-        inputs.shooterPositionYaw = yawMotorPosition.getValueAsDouble();
+        inputs.pitchServoRequestedPosition = pitchServo1.get();
 
-        // Actuator telemetry
-        inputs.actuatorPosition = actuatorPosition;
+        var yawStatus =
+                BaseStatusSignal.refreshAll(
+                        yawMotorVoltage, yawMotorCurrent, yawMotorTemperature, yawMotorPosition);
 
-        // Limit switch zeroing
-        boolean limitPressed = !yawLimitSwitch.get(); // DIO is active-low
-        inputs.yawLimitSwitchPressed = limitPressed;
-        if (limitPressed && !yawZeroed) {
-            yawMotor.setPosition(0);
-            yawZeroed = true;
-        }
-        inputs.yawEncoderZeroed = yawZeroed;
+        inputs.yawConnected = yawStatus.isOK();
+        inputs.yawMotorVoltage = yawMotorVoltage.getValueAsDouble();
+        inputs.yawMotorCurrent = yawMotorCurrent.getValueAsDouble();
+        inputs.yawMotorTemperature = yawMotorTemperature.getValueAsDouble();
+        inputs.yawTurretPositionRotations = yawMotorPosition.getValueAsDouble();
+        inputs.yawLimitSwitchPressed = !yawLimitSwitch.get(); // DIO is active-low
     }
 
     @Override
-    public void setTurretPitchPosition(double newPosition) {
-        setActuatorPosition(newPosition);
+    public void setFlywheelVoltage(double newVoltage) {
+        flywheelMotor.setControl(voltageRequest.withOutput(newVoltage));
     }
 
     @Override
-    public void setTurretYawPosition(double newPosition) {}
-
-    @Override
-    public void setTurretFiringVoltage(double newVoltage) {
-        firingVoltageOut.withOutput(MathUtil.clamp(newVoltage, -1, 1));
-        firingMotor.setControl(firingVoltageOut);
+    public void setFlyWheelVelocity(double newVelocity, double feedforwardValue) {
+        // convert meters per second to rotations per second
+        flywheelMotor.setControl(
+                velocityRequest
+                        .withVelocity(
+                                // multiply by 2 because only 1 side of ball is controlled by motor
+                                Units.radiansToRotations(
+                                        newVelocity / Shooter.FLYWHEEL_RADIUS_METERS * 2))
+                        .withFeedForward(feedforwardValue));
     }
 
     @Override
-    public void setTurretTargetFiringVelocity(double newVelocity) {
-        velocityRequest.withVelocity(MathUtil.clamp(newVelocity, -0.2, 0.2));
-        firingMotor.setControl(velocityRequest);
+    public void setPitchAngle(double newAngle) {
+        double pos =
+                MathUtil.inverseInterpolate(
+                        Shooter.pitchMinAngleRad.get(), Shooter.pitchMaxAngleRad.get(), newAngle);
+        // 1.0 - because extending actuator results in a decrease in angle
+        pos = 1.0 - pos;
+
+        pitchServo1.set(pos);
+        pitchServo2.set(pos);
     }
 
     @Override
-    public void setTurretPitchMotorVoltage(double newVoltage) {}
-
-    @Override
-    public void setTurretYawMotorVoltage(double newVoltage) {
-        if (yawZeroed) {
-            double motorRotations = yawMotorPosition.getValueAsDouble();
-            double minRot = Shooter.yawMinRotations.get();
-            double maxRot = Shooter.yawMaxRotations.get();
-
-            Logger.recordOutput("Shooter/yawLimitDebug/motorRotations", motorRotations);
-            Logger.recordOutput("Shooter/yawLimitDebug/requestedVoltage", newVoltage);
-
-            // At forward limit: hold position instead of allowing further rotation
-            if (motorRotations >= maxRot && newVoltage > 0) {
-                Logger.recordOutput("Shooter/yawLimitDebug/holding", "forward");
-                yawMotor.setControl(yawPositionRequest.withPosition(maxRot));
-                return;
-            }
-            // At reverse limit: hold position instead of allowing further rotation
-            if (motorRotations <= minRot && newVoltage < 0) {
-                Logger.recordOutput("Shooter/yawLimitDebug/holding", "reverse");
-                yawMotor.setControl(yawPositionRequest.withPosition(minRot));
-                return;
-            }
-
-            Logger.recordOutput("Shooter/yawLimitDebug/holding", "none");
-        }
-        yawVoltageOut.withOutput(MathUtil.clamp(newVoltage, -2, 2));
-        yawMotor.setControl(yawVoltageOut);
+    public void setYawVoltage(double newVoltage) {
+        yawMotor.setControl(voltageRequest.withOutput(newVoltage));
     }
 
     @Override
-    public void setActuatorPosition(double position) {
-        actuatorPosition = position;
-        actuatorLeft.set(position);
-        actuatorRight.set(position);
+    public void setYawPosition(double newPosition) {
+        setYawState(newPosition, 0, 0);
     }
 
     @Override
-    public void updatePIDFiringMotors(double kP, double kD) {
-        config.Slot0.kP = kP;
-        config.Slot0.kD = kD;
-        PhoenixUtil.tryUntilOk(5, () -> firingMotor.getConfigurator().apply(config, 0.25));
+    public void setYawState(double newPosition, double newVelocity, double feedforwardValue) {
+        yawMotor.setControl(
+                positionRequest
+                        .withPosition(newPosition)
+                        .withVelocity(newVelocity)
+                        .withFeedForward(feedforwardValue));
     }
 
     @Override
-    public void updatePIDPitchMotor(double kP, double kD) {}
+    public void updateFlywheelPID(double kP, double kD) {
+        flywheelConfig.Slot0.kP = kP;
+        flywheelConfig.Slot0.kD = kD;
+        PhoenixUtil.tryUntilOk(
+                5, () -> flywheelMotor.getConfigurator().apply(flywheelConfig, 0.25));
+        PhoenixUtil.tryUntilOk(
+                5, () -> flywheelMotorFollower.getConfigurator().apply(flywheelConfig, 0.25));
+    }
 
     @Override
-    public void updatePIDYawMotor(double kP, double kD) {}
+    public void updateYawPID(double kP, double kD) {
+        yawConfig.Slot0.kP = kP;
+        yawConfig.Slot0.kD = kD;
+        PhoenixUtil.tryUntilOk(5, () -> yawMotor.getConfigurator().apply(yawConfig, 0.25));
+    }
+
+    public void zeroYaw() {
+        yawMotor.setPosition(Shooter.yawZeroingOffset.get());
+    }
 }

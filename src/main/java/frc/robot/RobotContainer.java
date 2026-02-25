@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -59,6 +60,11 @@ public class RobotContainer {
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+        // initialize all AprilTag field layouts at start to avoid delays when first getting them
+        for (AprilTagLayoutType type : AprilTagLayoutType.values()) {
+            type.getLayout();
+        }
+
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
@@ -199,22 +205,17 @@ public class RobotContainer {
 
         controller
                 .y()
-                .onTrue(shooter.startAimingAtHub())
-                .onTrue(shooter.startShootingAtHub())
-                .onFalse(shooter.stopShootingAtHub())
-                .onFalse(shooter.stopAimingAtHub());
-
-        // Manual pitch: bumpers raise/lower shooter
-        controller.rightBumper().whileTrue(shooter.raiseShooter());
-        controller.leftBumper().whileTrue(shooter.lowerShooter());
+                .whileTrue(
+                        shooter.aimAtHub()
+                                .alongWith(
+                                        Commands.waitUntil(shooter::isAimedAtTarget)
+                                                .andThen(shooter.shootAtTarget())));
 
         // Manual yaw: triggers rotate turret
-        controller
-                .rightTrigger(0.1)
-                .whileTrue(shooter.runTurretYaw(() -> controller.getRightTriggerAxis()));
-        controller
-                .leftTrigger(0.1)
-                .whileTrue(shooter.runTurretYaw(() -> -controller.getLeftTriggerAxis()));
+        controller.povLeft().whileTrue(shooter.rotateTurretCounterClockwise());
+        controller.povRight().whileTrue(shooter.rotateTurretClockwise());
+        controller.povUp().whileTrue(shooter.shoot());
+        controller.povDown().onTrue(shooter.raiseShooterHood()).onFalse(shooter.lowerShooterHood());
 
         // Reset gyro to 0° when B button is pressed
         controller

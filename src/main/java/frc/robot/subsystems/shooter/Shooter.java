@@ -1,14 +1,19 @@
 package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.FieldConstants;
@@ -17,292 +22,419 @@ import frc.robot.util.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.Logger;
 
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Shooter extends SubsystemBase {
+    static final double FLYWHEEL_GEAR_RATIO = 1.0; // sensor to mechanism ratio
+    static final double YAW_GEAR_RATIO = 48.0; // sensor to mechanism ratio
+    static final double FLYWHEEL_RADIUS_METERS = Units.inchesToMeters(2.0);
+
+    // for command requirements, since shooter has multiple motors and we want to be able to
+    // run them independently
+    private final Subsystem shooterSubsystem = new Subsystem() {};
+
     private final ShooterIO io;
     private final ShooterIOInputsAutoLogged inputs;
+    private final Supplier<Pose2d> robotPoseSupplier;
 
-    private final Translation3d shooterTranslationOnRobot =
-            new Translation3d(Units.inchesToMeters(13.0), 0, 0.8);
     // translation of shooter from robot center (m) (please update please please)
-    private static final double flywheelRadiusMeters = 0.05; // ~2 inch radius, measure on robot
-    private static final LoggedTunableNumber targetFlywheelRadsPerSecond =
-            new LoggedTunableNumber("Shooter/targetFlywheelRadiansPerSecond", 0.2);
-    private static final LoggedTunableNumber pitchMinRad =
-            new LoggedTunableNumber("Shooter/pitchMinRad", 0.0);
-    private static final LoggedTunableNumber pitchMaxRad =
-            new LoggedTunableNumber("Shooter/pitchMaxRad", Math.PI / 4.0);
+    private final Translation3d shooterTranslationOnRobot =
+            new Translation3d(
+                    Units.inchesToMeters(6.5),
+                    Units.inchesToMeters(-4.5),
+                    Units.inchesToMeters(16));
 
-    private boolean tryToAimAtHub = false;
-    // whether we are currently trying to aim at the hub (used for aiming command)
+    private static final LoggedTunableNumber hubEdgeDY =
+            new LoggedTunableNumber("Shooter/Hub Edge dy", 0.3);
+    private static final LoggedTunableNumber hubEdgeDX =
+            new LoggedTunableNumber("Shooter/Hub Edge dx", 0.84);
 
-    private final Supplier<Pose2d> robotPose;
-    private static final LoggedTunableNumber maxShootingSpeed = // RPM
-            new LoggedTunableNumber("Shooter/maxShootingSpeed", 120);
-    private static final LoggedTunableNumber shooterTrenchPitchPosition =
-            new LoggedTunableNumber("Shooter/trenchPitchPosition", 0);
+    private static final LoggedTunableNumber flywheelOpenLoopVoltage =
+            new LoggedTunableNumber("Shooter/Flywheel/Open Loop Voltage", 0.5);
+    private static final LoggedTunableNumber flywheelTolerance =
+            new LoggedTunableNumber("Shooter/Flywheel/ToleranceMPS", 0.1);
+    static final LoggedTunableNumber flywheelKP =
+            new LoggedTunableNumber("Shooter/Flywheel/kP", 0.02);
+    static final LoggedTunableNumber flywheelKD =
+            new LoggedTunableNumber("Shooter/Flywheel/kD", 0.0);
+    static final LoggedTunableNumber flywheelKS =
+            new LoggedTunableNumber("Shooter/Flywheel/kS", 0.0);
+    static final LoggedTunableNumber flywheelKV =
+            new LoggedTunableNumber("Shooter/Flywheel/kV", 0.76);
+    // multiplier to account for lack of acceleration under hood
+    static final LoggedTunableNumber flywheelMultiplier =
+            new LoggedTunableNumber("Shooter/Flywheel/Multiplier", 1.2);
 
-    static final LoggedTunableNumber firingMotorP =
-            new LoggedTunableNumber("Shooter/firingMotorPID/p", 0.1);
-    static final LoggedTunableNumber firingMotorD =
-            new LoggedTunableNumber("Shooter/firingMotorPID/d", 0);
-    static final LoggedTunableNumber yawMotorP =
-            new LoggedTunableNumber("Shooter/yawMotorPID/p", 1.0);
-    static final LoggedTunableNumber yawMotorD =
-            new LoggedTunableNumber("Shooter/yawMotorPID/d", 0);
+    // These values in radians
+    static final LoggedTunableNumber pitchMinAngleRad =
+            new LoggedTunableNumber("Shooter/Pitch/Min Angle Radians", Units.degreesToRadians(20));
+    static final LoggedTunableNumber pitchMaxAngleRad =
+            new LoggedTunableNumber("Shooter/Pitch/Max Angle Radians", Units.degreesToRadians(85));
 
-    private static final LoggedTunableNumber maxYawVoltage =
-            new LoggedTunableNumber("Shooter/maxYawVoltage", 6.0);
+    private static final LoggedTunableNumber yawZeroingVoltage =
+            new LoggedTunableNumber("Shooter/Yaw/Zeroing Voltage", 0.67);
+    private static final LoggedTunableNumber yawOpenLoopVoltage =
+            new LoggedTunableNumber("Shooter/Yaw/Open Loop Voltage", 1.0);
+    private static final LoggedTunableNumber yawTolerance =
+            new LoggedTunableNumber("Shooter/Yaw/Tolerance", 0.01);
+    static final LoggedTunableNumber yawZeroingOffset =
+            new LoggedTunableNumber("Shooter/Yaw/Zeroing Offset", -0.285);
     static final LoggedTunableNumber yawMinRotations =
-            new LoggedTunableNumber("Shooter/yawMinRotations", -10.0);
+            new LoggedTunableNumber("Shooter/Yaw/Min Rotations", -0.4);
     static final LoggedTunableNumber yawMaxRotations =
-            new LoggedTunableNumber("Shooter/yawMaxRotations", 18.75);
-    private static final LoggedTunableNumber actuatorRate =
-            new LoggedTunableNumber("Shooter/actuatorRate", 0.01);
-    private static final LoggedTunableNumber zeroingVoltage =
-            new LoggedTunableNumber("Shooter/zeroingVoltage", 1.0);
-    private static final LoggedTunableNumber yawTrackingP =
-            new LoggedTunableNumber("Shooter/yawTrackingP", 0.5);
-    private static final LoggedTunableNumber yawTrackingDeadband =
-            new LoggedTunableNumber("Shooter/yawTrackingDeadband", 0.5);
-    static final LoggedTunableNumber yawMotorRotationsPerTurretRotation =
-            new LoggedTunableNumber("Shooter/yawMotorRotationsPerTurretRotation", 46.0);
-    private static final LoggedTunableNumber yawZeroOffsetDeg =
-            new LoggedTunableNumber("Shooter/yawZeroOffsetDeg", 90.0);
-    private static final LoggedTunableNumber acceptableYawDeviation =
-            new LoggedTunableNumber("Shooter/acceptableYawDeviation", 1);
-    // how far off we can be from the target yaw ROTATIONS in either direction and still be "aimed"
-    private static final LoggedTunableNumber acceptablePitchDeviation =
-            new LoggedTunableNumber("Shooter/acceptablePitchDeviation", 0);
-    // TODO fix pitch stuff later, currently 0 since we're only doing yaw tracking for the hub
+            new LoggedTunableNumber("Shooter/Yaw/Max Rotations", 0.13);
+    static final LoggedTunableNumber yawKP = new LoggedTunableNumber("Shooter/Yaw/kP", 120.0);
+    static final LoggedTunableNumber yawKD = new LoggedTunableNumber("Shooter/Yaw/kD", 0.0);
+    static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Shooter/Yaw/kS", 0.0);
+    static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Shooter/Yaw/kV", 0.76);
 
-    private double targetActuatorPosition = 0.5;
-    private double targetYawPosition = 0.5;
+    private Translation3d targetTranslation = null;
+    // clearance is defined as an additional horizontal and vertical distance from the target
+    // that the ball must clear before reaching the target
+    private Translation2d targetClearance = null;
+    // coefficients for quadratic equation to model pitch and velocity
+    private double[] pitchAndVelocityCoefficients = null;
+    private double flywheelTargetVelocity = 0.0;
+    private double pitchTargetAngle = pitchMaxAngleRad.get();
+    private double yawTargetPosition = 0.0;
+    private double yawTargetVelocity = 0.0;
+    private boolean yawZeroed = false;
+    private boolean canAimAtTarget = false;
+    private Pose2d lastPose;
+    private double lastPoseTimestamp;
 
-    private boolean fireWhenAimed = false; // whether to fire automatically when aimed at the hub
-    private boolean wasZeroed = false;
-    private boolean yawCommandedThisCycle = false;
+    private SimpleMotorFeedforward flywheelFeedforward =
+            new SimpleMotorFeedforward(flywheelKS.get(), flywheelKV.get());
+    private SimpleMotorFeedforward yawFeedforward =
+            new SimpleMotorFeedforward(yawKS.get(), yawKV.get());
 
-    public Shooter(ShooterIO io, Supplier<Pose2d> robotPose) {
+    public Shooter(ShooterIO io, Supplier<Pose2d> robotPoseSupplier) {
         this.io = io;
         this.inputs = new ShooterIOInputsAutoLogged();
-        this.robotPose = robotPose;
+        this.robotPoseSupplier = robotPoseSupplier;
+        this.lastPose = robotPoseSupplier.get();
+        this.lastPoseTimestamp = Timer.getFPGATimestamp();
     }
 
     public void periodic() {
-
         double startTime = Timer.getFPGATimestamp();
         io.updateInputs(inputs);
 
         checkForPIDUpdates();
 
-        // Drive turret slowly counterclockwise until limit switch zeros the encoder
-        if (!inputs.yawEncoderZeroed) {
-            io.setTurretYawMotorVoltage(zeroingVoltage.get());
-        } else if (!wasZeroed) {
-            io.setTurretYawMotorVoltage(0);
-            wasZeroed = true;
-        } else if (!yawCommandedThisCycle) {
-            // No command was sent this cycle (trigger released) — enforce limits
-            io.setTurretYawMotorVoltage(0);
-        }
-        yawCommandedThisCycle = false;
-
-        if (tryToAimAtHub) aimAtHub();
-
-        if (isAimedAtHub() && fireWhenAimed) {
-            io.setTurretTargetFiringVelocity(targetFlywheelRadsPerSecond.get());
+        if (!yawZeroed) {
+            if (inputs.yawLimitSwitchPressed) {
+                yawZeroed = true;
+                io.setYawVoltage(0);
+                io.zeroYaw();
+            } else {
+                io.setYawVoltage(yawZeroingVoltage.get());
+            }
+        } else if (targetTranslation != null && targetClearance != null) {
+            calculateVelocitiesForTarget(targetTranslation);
+            io.setYawState(
+                    yawTargetPosition,
+                    yawTargetVelocity,
+                    yawFeedforward.calculate(yawTargetVelocity));
         } else {
-            io.setTurretTargetFiringVelocity(0);
+            // leave yaw in previous position TODO might change later
+            io.setYawVoltage(0.0);
         }
+        io.setPitchAngle(pitchTargetAngle);
 
-        Logger.processInputs("shooter", inputs);
-        Logger.recordOutput("Shooter/targetActuatorPosition", targetActuatorPosition);
-        Logger.recordOutput("Shooter/targetYawPosition", targetYawPosition);
-        Logger.recordOutput("Shooter/yawEncoderZeroed", inputs.yawEncoderZeroed);
-        Logger.recordOutput("Shooter/aimingAtHub", tryToAimAtHub);
-        Logger.recordOutput("Shooter/yawZeroed", inputs.yawEncoderZeroed);
-        Logger.recordOutput("PeriodicTime/Shooter", (Timer.getFPGATimestamp() - startTime) * 1000);
+        // update lastPose and lastPoseTimestamp
+        lastPose = robotPoseSupplier.get();
+        lastPoseTimestamp = Timer.getFPGATimestamp();
+
+        Logger.processInputs("Shooter", inputs);
+        Logger.recordOutput("Shooter/Yaw Zeroed", yawZeroed);
+        Logger.recordOutput("Shooter/Flywheel Target Velocity", flywheelTargetVelocity);
+        Logger.recordOutput(
+                "Shooter/Flywheel Target Without Multiplier",
+                flywheelTargetVelocity / flywheelMultiplier.get());
+        Logger.recordOutput("Shooter/Pitch Target Angle", pitchTargetAngle);
+        Logger.recordOutput("Shooter/Yaw Target Position", yawTargetPosition);
+        Logger.recordOutput("Shooter/Yaw Target Velocity", yawTargetVelocity);
+        Logger.recordOutput("Shooter/Target Translation", targetTranslation);
+        Logger.recordOutput("Shooter/Can Aim At Target", canAimAtTarget);
+        Logger.recordOutput("Shooter/Is Aimed At Hub", isAimedAtTarget());
+        Logger.recordOutput(
+                "Shooter/Pitch and Velocity Coefficients", pitchAndVelocityCoefficients);
+        Logger.recordOutput(
+                "PerformanceMonitor/Shooter", (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 
-    public Command lowerForTrench() {
+    public Command shoot() {
+        return Commands.startEnd(
+                () -> {
+                    io.setFlywheelVoltage(flywheelOpenLoopVoltage.get());
+                },
+                () -> {
+                    io.setFlywheelVoltage(0);
+                },
+                shooterSubsystem);
+    }
 
+    public Command shootAtTarget() {
+        return Commands.runEnd(
+                () -> {
+                    io.setFlyWheelVelocity(
+                            flywheelTargetVelocity,
+                            flywheelFeedforward.calculate(flywheelTargetVelocity));
+                },
+                () -> {
+                    io.setFlywheelVoltage(0);
+                },
+                shooterSubsystem);
+    }
+
+    public Command raiseShooterHood() {
         return Commands.runOnce(
                 () -> {
-                    io.setTurretPitchPosition(shooterTrenchPitchPosition.get());
-                    tryToAimAtHub = false;
+                    pitchTargetAngle = pitchMinAngleRad.get();
                 },
                 this);
     }
 
-    public Command startShootingAtHub() {
-        return this.runOnce(
-                () -> {
-                    fireWhenAimed = true;
-                });
-    }
-
-    public Command stopShootingAtHub() {
-        return this.runOnce(
-                () -> {
-                    fireWhenAimed = false;
-                    io.setTurretTargetFiringVelocity(0);
-                });
-    }
-
-    public Command startAimingAtHub() {
+    public Command lowerShooterHood() {
         return Commands.runOnce(
                 () -> {
-                    tryToAimAtHub = true;
+                    pitchTargetAngle = pitchMaxAngleRad.get();
                 },
                 this);
     }
 
-    public Command stopAimingAtHub() {
+    public Command rotateTurretCounterClockwise() {
+        return Commands.run(() -> io.setYawVoltage(yawOpenLoopVoltage.get()), this);
+    }
+
+    public Command rotateTurretClockwise() {
+        return Commands.run(() -> io.setYawVoltage(-yawOpenLoopVoltage.get()), this);
+    }
+
+    public Command aimAtHub() {
         return Commands.runOnce(
-                () -> {
-                    tryToAimAtHub = false;
-                },
-                this);
+                        () -> {
+                            targetClearance = new Translation2d(hubEdgeDX.get(), hubEdgeDY.get());
+                        },
+                        this)
+                .andThen(
+                        Commands.runEnd(
+                                () -> {
+                                    if (robotPoseSupplier.get().getX()
+                                                    > FieldConstants.LinesVertical.neutralZoneNear
+                                            && robotPoseSupplier.get().getX()
+                                                    < FieldConstants.LinesVertical.neutralZoneFar) {
+                                        targetTranslation =
+                                                null; // don't aim if we're in the neutral zone
+                                    } else {
+                                        Translation3d hubTranslation =
+                                                AllianceFlipUtil.shouldFlip()
+                                                        ? FieldConstants.Hub.oppInnerCenterPoint
+                                                        : FieldConstants.Hub.innerCenterPoint;
+                                        targetTranslation = hubTranslation;
+                                    }
+                                },
+                                () -> {
+                                    targetTranslation = null;
+                                    targetClearance = null;
+                                },
+                                this))
+                .andThen(this::lowerShooterHood);
     }
 
     private void checkForPIDUpdates() {
-        if (firingMotorP.hasChanged(this.hashCode()) || firingMotorD.hasChanged(this.hashCode())) {
-            io.updatePIDFiringMotors(firingMotorP.get(), firingMotorD.get());
+        if (flywheelKP.hasChanged(this.hashCode()) || flywheelKD.hasChanged(this.hashCode())) {
+            io.updateFlywheelPID(flywheelKP.get(), flywheelKD.get());
         }
 
-        if (yawMotorP.hasChanged(this.hashCode()) || yawMotorD.hasChanged(this.hashCode())) {
-            io.updatePIDYawMotor(yawMotorP.get(), yawMotorD.get());
+        if (flywheelKS.hasChanged(this.hashCode()) || flywheelKV.hasChanged(this.hashCode())) {
+            flywheelFeedforward.setKs(flywheelKS.get());
+            flywheelFeedforward.setKv(flywheelKV.get());
+        }
+
+        if (yawKP.hasChanged(this.hashCode()) || yawKD.hasChanged(this.hashCode())) {
+            io.updateYawPID(yawKP.get(), yawKD.get());
+        }
+
+        if (yawKS.hasChanged(this.hashCode()) || yawKV.hasChanged(this.hashCode())) {
+            yawFeedforward.setKs(yawKS.get());
+            yawFeedforward.setKv(yawKV.get());
         }
     }
 
-    private void aimAtHub() {
-        // Get hub position, flipped for alliance
+    private double calculateYawPosition(
+            Pose2d robotPose, Translation2d shooterToTargetTranslation) {
+        // Calculate angle from shooter to target
+        Rotation2d targetAngle = shooterToTargetTranslation.getAngle();
 
-        boolean shouldFlip = AllianceFlipUtil.shouldFlip();
-        if (robotPose.get().getX() > FieldConstants.LinesVertical.neutralZoneNear
-                && robotPose.get().getX() < FieldConstants.LinesVertical.neutralZoneFar) {
-            return; // don't aim if we're in the neutral zone
+        // Convert to robot-relative angle (how far the turret needs be rotated from robot forward)
+        Rotation2d calculatedYawPosition = targetAngle.minus(robotPose.getRotation());
+
+        return calculatedYawPosition.getRotations();
+    }
+
+    private double[] solveQuadraticSystem(
+            double x1, double y1, double x2, double y2, double x3, double y3) {
+        try {
+            double[] vec =
+                    new Matrix<>(
+                                    Nat.N3(),
+                                    Nat.N3(),
+                                    new double[] {
+                                        x1 * x1, x1, 1,
+                                        x2 * x2, x2, 1,
+                                        x3 * x3, x3, 1
+                                    })
+                            .solve(new Matrix<>(Nat.N3(), Nat.N1(), new double[] {y1, y2, y3}))
+                            .getData();
+
+            // some sanity checks, d^2y/dx^2 should be negative, dy/dx should be positive at 0
+            if (vec[0] >= 0 || vec[1] <= 0) {
+                return null;
+            }
+            return vec;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private double[] solveForPitchAndVelocity(double a, double b, double c) {
+        if (c != 0) {
+            // this should never happen since we solve the system with c = 0, but just in case
+            return new double[] {0, 0};
         }
 
-        Translation3d hubTranslation =
-                !shouldFlip
-                        ? FieldConstants.Hub.topCenterPoint
-                        : FieldConstants.Hub.oppTopCenterPoint;
+        // curvePeakX = -b / 2a
+        // curvePeakY = a * (curvePeakX)^2 + b * curvePeakX
+        //            = b^2 / 4a - b^2 / 2a
+        //            = -b^2 / 4a
+        double curvePeakY = -(b * b) / (4 * a);
 
-        Translation2d shooterTranslation =
-                robotPose.get().getTranslation().plus(shooterTranslationOnRobot.toTranslation2d());
+        // b for y(t) equation is verticalVelocity = v
+        // peakX for y(t) = v / g
+        // peakY for y(t) = -(g/2) * (v/g)^2 + v * (v/g)
+        //                = -v^2 / 2g + v^2 / g
+        //                = v^2 / 2g
+        // since the peakYs are equal
+        // peakY = v^2 / 2g
+        // v = sqrt(2 * peakY * g)
+        double verticalVelocity =
+                Math.sqrt(2 * curvePeakY * FieldConstants.PhysicalConstants.GRAVITY);
 
-        // Horizontal distance from shooter to hub
-        double baseDistance = shooterTranslation.getDistance(hubTranslation.toTranslation2d());
+        // can be found with dy/dx = b
+        // dx = dy / b
+        double horizontalVelocity = verticalVelocity / b;
 
-        // Muzzle speed from fixed target flywheel speed
-        double muzzleSpeed = targetFlywheelRadsPerSecond.get() * flywheelRadiusMeters;
+        return new double[] {
+            Math.atan2(verticalVelocity, horizontalVelocity),
+            Math.hypot(horizontalVelocity, verticalVelocity)
+        };
+    }
 
-        double horizDist = baseDistance;
-        double vertDist = hubTranslation.getZ() - shooterTranslationOnRobot.getZ();
+    private double solveForVelocityWithAngle(
+            double angle, double horizontalDistance, double verticalDistance) {
+        // y = ax^2 + bx
+        // b = tan(angle)
+        // plug in x = horizontalDistance and y = verticalDistance to get a
+        // a = (y - b*x) / x^2
+        double b = Math.tan(angle);
+        double a =
+                (verticalDistance - b * horizontalDistance)
+                        / (horizontalDistance * horizontalDistance);
 
-        double targetPitch = solveForPitch(muzzleSpeed, horizDist, vertDist);
+        return solveForPitchAndVelocity(a, b, 0)[1];
+    }
 
-        if (!Double.isNaN(targetPitch)) {
-            /*
-            // Second pass: re-solve with barrel correction using first-pass pitch
-            // currently commented out
-            horizDist = baseDistance + lengthOfShooter * Math.cos(targetPitch);
-            vertDist =
-                    hubTranslation.getZ()
-                            - shooterTranslationOnRobot.getZ()
-                            - lengthOfShooter * Math.sin(targetPitch);
-            targetPitch = solveForPitch(muzzleSpeed, horizDist, vertDist); */
+    private void calculateVelocitiesForTarget(Translation3d targetTranslation) {
+        Pose2d robotPose = robotPoseSupplier.get();
 
-            io.setActuatorPosition(targetPitch);
-            Logger.recordOutput("Shooter/aimAtHubError", false);
+        Translation3d shooterTranslation =
+                new Translation3d(robotPose.getTranslation()).plus(shooterTranslationOnRobot);
+        // Calculate translation from shooter to hub
+        Translation3d shooterToHubTranslation = targetTranslation.minus(shooterTranslation);
+
+        Translation2d shooterToHubHorizontal = shooterToHubTranslation.toTranslation2d();
+        double shooterToHubVertical = shooterToHubTranslation.getZ();
+
+        // TODO: maybe estimate time to target and combine with last pose to adjust target
+        // if shooting while moving is too inaccurate
+
+        double dist = shooterToHubHorizontal.getNorm();
+        // these points are in coordinate system where x is horizontal distance and y is vertical
+        // distance
+        pitchAndVelocityCoefficients =
+                solveQuadraticSystem(
+                        0, // shooter x
+                        0, // shooter y
+                        dist - targetClearance.getX(), // lip of hub x
+                        shooterToHubVertical + targetClearance.getY(), // lip of hub y
+                        dist, // center of hub x
+                        shooterToHubVertical); // center of hub y
+
+        pitchTargetAngle = 0;
+        if (pitchAndVelocityCoefficients != null) {
+            double[] values =
+                    solveForPitchAndVelocity(
+                            pitchAndVelocityCoefficients[0],
+                            pitchAndVelocityCoefficients[1],
+                            pitchAndVelocityCoefficients[2]);
+            pitchTargetAngle = values[0];
+
+            if (pitchTargetAngle < pitchMinAngleRad.get()) {
+                pitchTargetAngle = pitchMinAngleRad.get();
+                flywheelTargetVelocity =
+                        solveForVelocityWithAngle(pitchTargetAngle, dist, shooterToHubVertical);
+            } else if (pitchTargetAngle <= pitchMaxAngleRad.get()) {
+                flywheelTargetVelocity = values[1];
+            } else {
+                // cannot hit target
+                pitchTargetAngle = pitchMaxAngleRad.get();
+                flywheelTargetVelocity = 0;
+            }
+
+            // in case calculated velocity is negative, don't shoot
+            flywheelTargetVelocity = Math.max(flywheelTargetVelocity, 0);
         } else {
-            Logger.recordOutput("Shooter/aimAtHubError", true);
+            flywheelTargetVelocity = 0;
         }
 
-        Rotation2d bearing = hubTranslation.toTranslation2d().minus(shooterTranslation).getAngle();
+        flywheelTargetVelocity *= flywheelMultiplier.get();
 
-        // Convert to body-relative angle (how far the turret needs to rotate from robot forward)
-        Rotation2d robotRelativeAngle = bearing.minus(robotPose.get().getRotation());
+        double newYawTargetPosition = calculateYawPosition(robotPose, shooterToHubHorizontal);
 
-        // Convert body-relative angle to target motor rotations
-        double gearRatio = yawMotorRotationsPerTurretRotation.get();
-        double targetYawPosition =
-                robotRelativeAngle
-                                .plus(Rotation2d.fromDegrees(yawZeroOffsetDeg.get()))
-                                .getRotations()
-                        * gearRatio;
+        canAimAtTarget =
+                newYawTargetPosition > yawMinRotations.get()
+                        && newYawTargetPosition < yawMaxRotations.get()
+                        && pitchTargetAngle != 0;
 
-        // Clamp target to soft limits
-        targetYawPosition =
-                Math.max(yawMinRotations.get(), Math.min(yawMaxRotations.get(), targetYawPosition));
+        // avoid moving turret if we can't aim at target to prevent unnecessary movement
+        if (newYawTargetPosition >= yawMinRotations.get()
+                && newYawTargetPosition <= yawMaxRotations.get()) {
+            yawTargetPosition = newYawTargetPosition;
 
-        // P control on motor position error
-        double positionError = targetYawPosition - inputs.shooterPositionYaw;
-        Logger.recordOutput("Shooter/yawTargetMotorRot", targetYawPosition);
-        Logger.recordOutput("Shooter/yawPositionError", positionError);
-
-        if (Math.abs(positionError) > yawTrackingDeadband.get()) {
-            double voltage = positionError * yawTrackingP.get();
-            voltage = MathUtil.clamp(voltage, -maxYawVoltage.get(), maxYawVoltage.get());
-            io.setTurretYawMotorVoltage(voltage);
-            yawCommandedThisCycle = true;
+            Twist2d deltaPose = lastPose.log(robotPose);
+            yawTargetVelocity =
+                    Units.radiansToRotations(
+                            -deltaPose.dtheta / (Timer.getFPGATimestamp() - lastPoseTimestamp));
+        } else {
+            yawTargetVelocity = 0;
         }
-
-        // Command flywheel after pitch is set so angle is correct before motor spins up
-        io.setTurretTargetFiringVelocity(targetFlywheelRadsPerSecond.get());
     }
 
-    private boolean isAimedAtHub() {
-        if (!tryToAimAtHub) return false;
-        // Check if yaw and pitch are within acceptable deviation
-        double yawError = Math.abs(inputs.shooterPositionYaw - targetYawPosition);
-        double pitchError = Math.abs(inputs.shooterPositionPitch - targetActuatorPosition);
-        return yawError <= acceptableYawDeviation.get()
-                && pitchError <= acceptablePitchDeviation.get();
+    public boolean shooterRunningAtVelocity() {
+        return flywheelTargetVelocity > 0
+                && MathUtil.isNear(
+                        flywheelTargetVelocity,
+                        inputs.flywheelMotorVelocityMPS,
+                        flywheelTolerance.get());
     }
 
-    private double solveForPitch(double muzzleSpeed, double horizDist, double vertDist) {
-        double g = FieldConstants.PhysicalConstants.GRAVITY;
-
-        if (muzzleSpeed <= 0 || horizDist <= 0) return Double.NaN;
-        double speedSq = muzzleSpeed * muzzleSpeed;
-        double discriminant =
-                speedSq * speedSq - g * (g * horizDist * horizDist + 2 * vertDist * speedSq);
-        if (discriminant < 0) return Double.NaN;
-        double sqrtDisc = Math.sqrt(discriminant);
-        double thetaHigh = Math.atan((speedSq + sqrtDisc) / (g * horizDist));
-        double thetaLow = Math.atan((speedSq - sqrtDisc) / (g * horizDist));
-        return Math.max(thetaHigh, thetaLow); // higher arc
-    }
-
-    public Command raiseShooter() {
-        return Commands.run(
-                () -> {
-                    targetActuatorPosition =
-                            Math.min(1.0, targetActuatorPosition + actuatorRate.get());
-                    io.setActuatorPosition(targetActuatorPosition);
-                });
-    }
-
-    public Command lowerShooter() {
-        return Commands.run(
-                () -> {
-                    targetActuatorPosition =
-                            Math.max(0.0, targetActuatorPosition - actuatorRate.get());
-                    io.setActuatorPosition(targetActuatorPosition);
-                });
-    }
-
-    public Command runTurretYaw(DoubleSupplier input) {
-        return Commands.run(
-                () -> {
-                    yawCommandedThisCycle = true;
-                    double voltage = input.getAsDouble() * maxYawVoltage.get();
-                    io.setTurretYawMotorVoltage(voltage);
-                });
+    public boolean isAimedAtTarget() {
+        return canAimAtTarget
+                && MathUtil.isNear(
+                        yawTargetPosition,
+                        inputs.yawTurretPositionRotations,
+                        yawTolerance.get()); // no feedback from pitch;
     }
 }

@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.CANBus;
+
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -16,7 +18,7 @@ import edu.wpi.first.wpilibj.RobotBase;
  */
 public final class Constants {
     public static final Mode simMode = Mode.SIM;
-    public static final boolean tuningMode = false;
+    public static final boolean tuningMode = true;
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
     public static final boolean simWithVision = false;
@@ -32,8 +34,11 @@ public final class Constants {
         REPLAY
     }
 
-    public static int shooterFiringMotorOpenCanbus_ID = 16;
-    public static int shooterFiringMotorFollowerOpenCanbus_ID = 17;
-    public static int shooterYawMotorCanbus_ID = 18;
-    public static int yawLimitSwitchDIO = 0;
+    public static final CANBus shooterCANBus = new CANBus("canivore");
+    public static final int shooterFlywheelMotorCanbus_ID = 16;
+    public static final int shooterFlywheelMotorFollowerCanbus_ID = 17;
+    public static final int shooterPitchServo1PWM_ID = 0;
+    public static final int shooterPitchServo2PWM_ID = 1;
+    public static final int shooterYawMotorCanbus_ID = 18;
+    public static final int shooterYawLimitSwitchDIO = 0;
 }
