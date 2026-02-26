@@ -29,6 +29,14 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.hopper.indexer.Indexer;
+import frc.robot.subsystems.hopper.indexer.IndexerIO;
+import frc.robot.subsystems.hopper.indexer.IndexerIOSim;
+import frc.robot.subsystems.hopper.indexer.IndexerIOTalonFX;
+import frc.robot.subsystems.hopper.kicker.Kicker;
+import frc.robot.subsystems.hopper.kicker.KickerIO;
+import frc.robot.subsystems.hopper.kicker.KickerIOSim;
+import frc.robot.subsystems.hopper.kicker.KickerIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -51,6 +59,8 @@ public class RobotContainer {
     private final Vision vision;
     private final Drive drive;
     private final Shooter shooter;
+    private final Indexer hopperIndexer;
+    private final Kicker hopperKicker;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -85,8 +95,10 @@ public class RobotContainer {
                                 new VisionIOPhotonVision(cameraFLName, robotToCameraFL),
                                 new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
                                 new VisionIOPhotonVision(cameraBLName, robotToCameraBL));
-
                 shooter = new Shooter(new ShooterIOReal(), () -> drive.getPose());
+
+                hopperIndexer = new Indexer(new IndexerIOTalonFX());
+                hopperKicker = new Kicker(new KickerIOTalonFX());
 
                 break;
 
@@ -123,6 +135,8 @@ public class RobotContainer {
                 }
                 shooter = new Shooter(new ShooterIOSim(), () -> drive.getPose());
 
+                hopperIndexer = new Indexer(new IndexerIOSim());
+                hopperKicker = new Kicker(new KickerIOSim());
                 break;
 
             default:
@@ -143,6 +157,9 @@ public class RobotContainer {
                                 new VisionIO() {});
 
                 shooter = new Shooter(new ShooterIO() {}, () -> drive.getPose());
+
+                hopperIndexer = new Indexer(new IndexerIO() {});
+                hopperKicker = new Kicker(new KickerIO() {});
 
                 break;
         }
@@ -232,6 +249,11 @@ public class RobotContainer {
 
         // // Align to hub when Y button is held
         // controller.y().whileTrue(drive.alignToHub());
+
+        controller
+                .povUp()
+                .whileTrue(hopperIndexer.runIndexer())
+                .whileTrue(hopperKicker.runKicker());
     }
 
     /**
