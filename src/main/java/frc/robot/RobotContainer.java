@@ -37,6 +37,14 @@ import frc.robot.subsystems.hopper.kicker.Kicker;
 import frc.robot.subsystems.hopper.kicker.KickerIO;
 import frc.robot.subsystems.hopper.kicker.KickerIOSim;
 import frc.robot.subsystems.hopper.kicker.KickerIOTalonFX;
+import frc.robot.subsystems.intake.deployer.Deployer;
+import frc.robot.subsystems.intake.deployer.DeployerIO;
+import frc.robot.subsystems.intake.deployer.DeployerIOSim;
+import frc.robot.subsystems.intake.deployer.DeployerIOTalonFX;
+import frc.robot.subsystems.intake.flywheel.Flywheel;
+import frc.robot.subsystems.intake.flywheel.FlywheelIO;
+import frc.robot.subsystems.intake.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.intake.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -58,7 +66,9 @@ public class RobotContainer {
     // Subsystems
     private final Vision vision;
     private final Drive drive;
+    private final Flywheel intakeFlywheel;
     private final Shooter shooter;
+    private final Deployer intakeDeployer;
     private final Indexer hopperIndexer;
     private final Kicker hopperKicker;
 
@@ -95,6 +105,11 @@ public class RobotContainer {
                                 new VisionIOPhotonVision(cameraFLName, robotToCameraFL),
                                 new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
                                 new VisionIOPhotonVision(cameraBLName, robotToCameraBL));
+
+                intakeDeployer = new Deployer(new DeployerIOTalonFX());
+
+                intakeFlywheel = new Flywheel(new FlywheelIOTalonFX());
+
                 shooter = new Shooter(new ShooterIOReal(), () -> drive.getPose());
 
                 hopperIndexer = new Indexer(new IndexerIOTalonFX());
@@ -135,6 +150,9 @@ public class RobotContainer {
                 }
                 shooter = new Shooter(new ShooterIOSim(), () -> drive.getPose());
 
+                intakeDeployer = new Deployer(new DeployerIOSim());
+                intakeFlywheel = new Flywheel(new FlywheelIOSim());
+
                 hopperIndexer = new Indexer(new IndexerIOSim());
                 hopperKicker = new Kicker(new KickerIOSim());
                 break;
@@ -155,6 +173,10 @@ public class RobotContainer {
                                 new VisionIO() {},
                                 new VisionIO() {},
                                 new VisionIO() {});
+
+                intakeDeployer = new Deployer(new DeployerIO() {});
+
+                intakeFlywheel = new Flywheel(new FlywheelIO() {});
 
                 shooter = new Shooter(new ShooterIO() {}, () -> drive.getPose());
 
@@ -247,8 +269,18 @@ public class RobotContainer {
                                         drive)
                                 .ignoringDisable(true));
 
-        // // Align to hub when Y button is held
-        // controller.y().whileTrue(drive.alignToHub());
+        // Align to hub when Y button is held
+        controller.y().whileTrue(drive.alignToHub());
+
+        // intake controls
+        controller
+                .rightTrigger()
+                .onTrue(intakeDeployer.deployDeployer())
+                .onTrue(intakeFlywheel.runIntake());
+
+        controller.rightBumper().onTrue(intakeDeployer.deployerUp()).onTrue(intakeFlywheel.stop());
+
+        controller.leftTrigger().whileTrue(intakeFlywheel.runReverse());
 
         controller
                 .povUp()

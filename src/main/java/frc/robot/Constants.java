@@ -41,6 +41,10 @@ public final class Constants {
     public static final int shooterPitchServo2PWM_ID = 1;
     public static final int shooterYawMotorCanbus_ID = 18;
     public static final int shooterYawLimitSwitchDIO = 0;
-    public static int hopperIndexerMotorOpenCanbus_ID = 20; // need to change
-    public static int hopperKickerMotorOpenCanbus_ID = 21; // need to change
+
+    public static final int hopperIndexerMotorOpenCanbus_ID = 20; // need to change
+    public static final int hopperKickerMotorOpenCanbus_ID = 21; // need to change
+
+    public static final int intakeDeployerMotorCanbus_ID = 22;
+    public static final int intakeDeployerCancoder_ID = 23;
 }
