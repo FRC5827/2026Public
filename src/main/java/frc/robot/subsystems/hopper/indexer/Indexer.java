@@ -30,15 +30,13 @@ public class Indexer extends SubsystemBase {
     }
 
     public Command runIndexer() {
-        return this.run(() -> io.setVoltage(indexerVoltage.getAsDouble()));
-    }
-
-    public Command stopIndexer() {
-        return this.run(() -> io.setVoltage(0));
+        return this.startEnd(
+                () -> io.setVoltage(indexerVoltage.getAsDouble()), () -> io.setVoltage(0.0));
     }
 
     public Command runIndexerReverse() {
-        return this.run(() -> io.setVoltage(-indexerVoltage.getAsDouble()));
+        return this.startEnd(
+                () -> io.setVoltage(-indexerVoltage.getAsDouble()), () -> io.setVoltage(0.0));
     }
 
     public void setBrakeMode(boolean brake) {

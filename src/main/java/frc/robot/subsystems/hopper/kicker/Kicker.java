@@ -30,15 +30,13 @@ public class Kicker extends SubsystemBase {
     }
 
     public Command runKicker() {
-        return this.run(() -> io.setVoltage(kickerVoltage.getAsDouble()));
+        return this.startEnd(
+                () -> io.setVoltage(kickerVoltage.getAsDouble()), () -> io.setVoltage(0.0));
     }
 
-    public Command stopKicker() {
-        return this.run(() -> io.setVoltage(0));
-    }
-
-    public Command runReverse() {
-        return this.run(() -> io.setVoltage(-kickerVoltage.getAsDouble()));
+    public Command runKickerReverse() {
+        return this.startEnd(
+                () -> io.setVoltage(-kickerVoltage.getAsDouble()), () -> io.setVoltage(0.0));
     }
 
     public void setBrakeMode(boolean brake) {

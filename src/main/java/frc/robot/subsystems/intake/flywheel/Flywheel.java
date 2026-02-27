@@ -28,15 +28,15 @@ public class Flywheel extends SubsystemBase {
     }
 
     public Command runIntake() {
-        return this.run(() -> io.setFlywheelVoltage(flywheelVoltage.getAsDouble()));
-    }
-
-    public Command stop() {
-        return this.run(() -> io.setFlywheelVoltage(0));
+        return this.startEnd(
+                () -> io.setFlywheelVoltage(flywheelVoltage.getAsDouble()),
+                () -> io.setFlywheelVoltage((0.0)));
     }
 
     public Command runReverse() {
-        return this.run(() -> io.setFlywheelVoltage(-flywheelVoltage.getAsDouble()));
+        return this.startEnd(
+                () -> io.setFlywheelVoltage(-flywheelVoltage.getAsDouble()),
+                () -> io.setFlywheelVoltage(0.0));
     }
 
     public void setBrakeMode(boolean brake) {

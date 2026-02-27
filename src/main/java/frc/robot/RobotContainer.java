@@ -242,14 +242,6 @@ public class RobotContainer {
         // Switch to X pattern when X button is pressed
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        controller
-                .y()
-                .whileTrue(
-                        shooter.aimAtHub()
-                                .alongWith(
-                                        Commands.waitUntil(shooter::isAimedAtTarget)
-                                                .andThen(shooter.shootAtTarget())));
-
         // Manual yaw: triggers rotate turret
         controller.povLeft().whileTrue(shooter.rotateTurretCounterClockwise());
         controller.povRight().whileTrue(shooter.rotateTurretClockwise());
@@ -274,18 +266,35 @@ public class RobotContainer {
 
         // intake controls
         controller
-                .rightTrigger()
+                .leftTrigger()
                 .onTrue(intakeDeployer.deployDeployer())
-                .onTrue(intakeFlywheel.runIntake());
+                .whileTrue(intakeFlywheel.runIntake())
+                .onFalse(intakeDeployer.deployerUp());
 
-        controller.rightBumper().onTrue(intakeDeployer.deployerUp()).onTrue(intakeFlywheel.stop());
+        controller.povUp().whileTrue(intakeFlywheel.runReverse());
 
-        controller.leftTrigger().whileTrue(intakeFlywheel.runReverse());
-
+        // shoot controls
         controller
-                .povUp()
-                .whileTrue(hopperIndexer.runIndexer())
-                .whileTrue(hopperKicker.runKicker());
+                .rightTrigger()
+                .whileTrue(
+                        shooter.aimAtHub()
+                                .alongWith(
+                                        Commands.waitUntil(shooter::isAimedAtTarget)
+                                                .andThen(shooter.shootAtTarget()))
+                                .alongWith(
+                                        Commands.waitUntil(shooter::shooterRunningAtVelocity)
+                                                .andThen(
+                                                        hopperIndexer
+                                                                .runIndexer()
+                                                                .alongWith(
+                                                                        hopperKicker
+                                                                                .runKicker()))));
+
+        // Hopper and Kicker controls
+        controller
+                .povRight()
+                .whileTrue(hopperIndexer.runIndexerReverse())
+                .whileTrue(hopperKicker.runKickerReverse());
     }
 
     /**
