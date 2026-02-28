@@ -9,7 +9,7 @@ package frc.robot;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
-import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,11 +18,11 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.autos.AutoChooser;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -54,8 +54,6 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -75,8 +73,7 @@ public class RobotContainer {
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
-    // Dashboard inputs
-    private final LoggedDashboardChooser<Command> autoChooser;
+    private AutoChooser autoChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -186,32 +183,37 @@ public class RobotContainer {
                 break;
         }
 
-        // Set up auto routines
-        autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-        autoChooser.addDefaultOption("Test Align to Hub", drive.alignToHub());
+        // Set up auto chooser
+        autoChooser = new AutoChooser(drive);
 
-        // Set up SysId routines
-        autoChooser.addOption(
-                "Drive Wheel Radius Characterization",
-                DriveCommands.wheelRadiusCharacterization(drive));
-        autoChooser.addOption(
-                "Drive Simple FF Characterization",
-                DriveCommands.feedforwardCharacterization(drive));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Forward)",
-                drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Reverse)",
-                drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption(
-                "Drive SysId (Dynamic Forward)",
-                drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Drive SysId (Dynamic Reverse)",
-                drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        registerNamedCommands();
 
         // Configure the button bindings
         configureButtonBindings();
+    }
+
+    private void registerNamedCommands() {
+        // Named commands are commands in PathPlanner that are given a name so they can be directly
+        // used in an autos in PathPlanner.
+        NamedCommands.registerCommand(
+                "Shoot",
+                shooter.aimAtHub()
+                        .alongWith(
+                                Commands.waitUntil(shooter::isAimedAtTarget)
+                                        .andThen(shooter.shootAtTarget()))
+                        .alongWith(
+                                Commands.waitUntil(shooter::shooterRunningAtVelocity)
+                                        .andThen(
+                                                hopperIndexer
+                                                        .runIndexer()
+                                                        .alongWith(hopperKicker.runKicker()))));
+        NamedCommands.registerCommand(
+                "Intake",
+                Commands.sequence(
+                        intakeDeployer.deployDeployer(),
+                        intakeFlywheel.runIntake().withTimeout(2.0),
+                        intakeDeployer.deployerUp())); // TODO: Tune timeout
+        NamedCommands.registerCommand("Climb, ", Commands.print("CLIMB!"));
     }
 
     /**
