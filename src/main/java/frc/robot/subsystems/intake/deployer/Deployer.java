@@ -63,7 +63,7 @@ public class Deployer extends SubsystemBase {
     private final DeployerIO io;
     private final DeployerIOInputsAutoLogged inputs;
     private final LoggedTunableNumber deployerVoltage =
-            new LoggedTunableNumber("Deployer/DeployerVoltage", 8.0);
+            new LoggedTunableNumber("Deployer/DeployerVoltage", 0.0);
     private final ArmFeedforward deployerFeedforward;
     private TrapezoidProfile motionProfile;
     private TrapezoidProfile.State profileCurrentState, profileGoalState;

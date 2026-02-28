@@ -207,12 +207,7 @@ public class RobotContainer {
                                                 hopperIndexer
                                                         .runIndexer()
                                                         .alongWith(hopperKicker.runKicker()))));
-        NamedCommands.registerCommand(
-                "Intake",
-                Commands.sequence(
-                        intakeDeployer.deployDeployer(),
-                        intakeFlywheel.runIntake().withTimeout(2.0),
-                        intakeDeployer.deployerUp())); // TODO: Tune timeout
+        NamedCommands.registerCommand("Intake", intakeFlywheel.runIntake().withTimeout(2.0));
         NamedCommands.registerCommand("Climb, ", Commands.print("CLIMB!"));
     }
 
@@ -244,12 +239,6 @@ public class RobotContainer {
         // Switch to X pattern when X button is pressed
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        // Manual yaw: triggers rotate turret
-        controller.povLeft().whileTrue(shooter.rotateTurretCounterClockwise());
-        controller.povRight().whileTrue(shooter.rotateTurretClockwise());
-        controller.povUp().whileTrue(shooter.shoot());
-        controller.povDown().onTrue(shooter.raiseShooterHood()).onFalse(shooter.lowerShooterHood());
-
         // Reset gyro to 0° when B button is pressed
         controller
                 .b()
@@ -267,11 +256,7 @@ public class RobotContainer {
         controller.y().whileTrue(drive.alignToHub());
 
         // intake controls
-        controller
-                .leftTrigger()
-                .onTrue(intakeDeployer.deployDeployer())
-                .whileTrue(intakeFlywheel.runIntake())
-                .onFalse(intakeDeployer.deployerUp());
+        controller.leftTrigger().whileTrue(intakeFlywheel.runIntake());
 
         controller.povUp().whileTrue(intakeFlywheel.runReverse());
 
