@@ -27,6 +27,8 @@ import java.nio.file.Path;
  */
 public class FieldConstants {
     // AprilTag related constants
+    // TODO: MAKE SURE TO CHANGE TO WELDED AFTER PRACTICE FIELD AS THAT'S WHAT WILL BE AT COMP
+    public static final FieldType fieldType = FieldType.ANDYMARK;
     public static final int aprilTagCount =
             AprilTagLayoutType.OFFICIAL.getLayout().getTags().size();
     public static final double aprilTagWidth = Units.inchesToMeters(6.5);
@@ -337,9 +339,29 @@ public class FieldConstants {
                         0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
     }
 
+    public enum FieldType {
+        ANDYMARK("andymark"),
+        WELDED("welded");
+
+        private final String name;
+
+        FieldType(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
     public enum AprilTagLayoutType {
+        // The chances of us using the other files are very slim, but why not have them here just
+        // in case?
         OFFICIAL("2026-official"),
-        NONE("2026-none");
+        NONE("2026-none"),
+        HUB("2026-hub"),
+        OUTPOST("2026-outpost"),
+        TOWER("2026-tower");
 
         private final String name;
         private volatile AprilTagFieldLayout layout;
@@ -357,7 +379,12 @@ public class FieldConstants {
                             Path p =
                                     Filesystem.getDeployDirectory()
                                             .toPath()
-                                            .resolve("apriltags/" + name + ".json");
+                                            .resolve(
+                                                    "apriltags/"
+                                                            + fieldType.getName()
+                                                            + "/"
+                                                            + name
+                                                            + ".json");
                             layout = new AprilTagFieldLayout(p);
                             layoutString = new ObjectMapper().writeValueAsString(layout);
                         } catch (IOException e) {
