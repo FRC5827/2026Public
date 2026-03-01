@@ -195,20 +195,21 @@ public class RobotContainer {
     private void registerNamedCommands() {
         // Named commands are commands in PathPlanner that are given a name so they can be directly
         // used in an autos in PathPlanner.
-        NamedCommands.registerCommand(
-                "Shoot",
-                shooter.aimAtHub()
-                        .alongWith(
-                                Commands.waitUntil(shooter::isAimedAtTarget)
-                                        .andThen(shooter.shootAtTarget()))
-                        .alongWith(
-                                Commands.waitUntil(shooter::shooterRunningAtVelocity)
-                                        .andThen(
-                                                hopperIndexer
-                                                        .runIndexer()
-                                                        .alongWith(hopperKicker.runKicker()))));
+        // NamedCommands.registerCommand(
+        //         "Shoot",
+        //         shooter.aimAtHub()
+        //                 .alongWith(
+        //                         Commands.waitUntil(shooter::isAimedAtTarget)
+        //                                 .andThen(shooter.shootAtTarget()))
+        //                 .alongWith(
+        //                         Commands.waitUntil(shooter::shooterRunningAtVelocity)
+        //                                 .andThen(
+        //                                         hopperIndexer
+        //                                                 .runIndexer()
+        //                                                 .alongWith(hopperKicker.runKicker()))));
+        NamedCommands.registerCommand("Shoot", Commands.print("Shooting!"));
         NamedCommands.registerCommand("Intake", intakeFlywheel.runIntake().withTimeout(2.0));
-        NamedCommands.registerCommand("Climb, ", Commands.print("CLIMB!"));
+        NamedCommands.registerCommand("Climb", Commands.print("CLIMB!"));
     }
 
     /**
@@ -252,22 +253,18 @@ public class RobotContainer {
                                         drive)
                                 .ignoringDisable(true));
 
-        // Align to hub when Y button is held
-        controller.y().whileTrue(drive.alignToHub());
-
         // intake controls
         controller.leftTrigger().whileTrue(intakeFlywheel.runIntake());
 
         controller.povUp().whileTrue(intakeFlywheel.runReverse());
 
         // shoot controls
+        shooter.setDefaultCommand(shooter.aimAtHub());
         controller
                 .rightTrigger()
                 .whileTrue(
-                        shooter.aimAtHub()
-                                .alongWith(
-                                        Commands.waitUntil(shooter::isAimedAtTarget)
-                                                .andThen(shooter.shootAtTarget()))
+                        Commands.waitUntil(shooter::isAimedAtTarget)
+                                .andThen(shooter.shootAtTarget())
                                 .alongWith(
                                         Commands.waitUntil(shooter::shooterRunningAtVelocity)
                                                 .andThen(
@@ -282,6 +279,13 @@ public class RobotContainer {
                 .povRight()
                 .whileTrue(hopperIndexer.runIndexerReverse())
                 .whileTrue(hopperKicker.runKickerReverse());
+
+        controller
+                .povDown()
+                .onTrue(intakeDeployer.stowDeployer())
+                .onFalse(intakeDeployer.deployDeployer());
+
+        controller.rightBumper().whileTrue(intakeDeployer.deployerUp());
     }
 
     /**

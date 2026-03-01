@@ -12,7 +12,7 @@ public class Flywheel extends SubsystemBase {
     private final FlywheelIO io;
     private final FlywheelIOInputsAutoLogged inputs;
     private final LoggedTunableNumber flywheelVoltage =
-            new LoggedTunableNumber("Flywheel/flywheelVoltage", 1.0);
+            new LoggedTunableNumber("Intake/Flywheel/flywheelVoltage", 8.0);
 
     public Flywheel(FlywheelIO io) {
         this.io = io;
@@ -23,8 +23,10 @@ public class Flywheel extends SubsystemBase {
     public void periodic() {
         double startTime = Timer.getFPGATimestamp();
         io.updateInputs(inputs);
-        Logger.processInputs("Flywheel", inputs);
-        Logger.recordOutput("PeriodicTime/Flywheel", (Timer.getFPGATimestamp() - startTime) * 1000);
+        Logger.processInputs("Intake/Flywheel", inputs);
+        Logger.recordOutput(
+                "PerformanceMonitor/Intake/Flywheel",
+                (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 
     public Command runIntake() {

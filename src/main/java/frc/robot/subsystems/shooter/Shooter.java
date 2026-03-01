@@ -5,7 +5,10 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist2d;
@@ -38,11 +41,13 @@ public class Shooter extends SubsystemBase {
     private final Supplier<Pose2d> robotPoseSupplier;
 
     // translation of shooter from robot center (m) (please update please please)
-    private final Translation3d shooterTranslationOnRobot =
-            new Translation3d(
-                    Units.inchesToMeters(6.5),
-                    Units.inchesToMeters(-4.5),
-                    Units.inchesToMeters(16));
+    private final Transform3d shooterTransformOnRobot =
+            new Transform3d(
+                    new Translation3d(
+                            Units.inchesToMeters(6.5),
+                            Units.inchesToMeters(-4.5),
+                            Units.inchesToMeters(16)),
+                    Rotation3d.kZero);
 
     private static final LoggedTunableNumber hubEdgeDY =
             new LoggedTunableNumber("Shooter/Hub Edge dy", 0.3);
@@ -54,7 +59,7 @@ public class Shooter extends SubsystemBase {
     private static final LoggedTunableNumber flywheelTolerance =
             new LoggedTunableNumber("Shooter/Flywheel/ToleranceMPS", 0.1);
     static final LoggedTunableNumber flywheelKP =
-            new LoggedTunableNumber("Shooter/Flywheel/kP", 0.02);
+            new LoggedTunableNumber("Shooter/Flywheel/kP", 0.5);
     static final LoggedTunableNumber flywheelKD =
             new LoggedTunableNumber("Shooter/Flywheel/kD", 0.0);
     static final LoggedTunableNumber flywheelKS =
@@ -67,9 +72,9 @@ public class Shooter extends SubsystemBase {
 
     // These values in radians
     static final LoggedTunableNumber pitchMinAngleRad =
-            new LoggedTunableNumber("Shooter/Pitch/Min Angle Radians", Units.degreesToRadians(20));
+            new LoggedTunableNumber("Shooter/Pitch/Min Angle Radians", Units.degreesToRadians(55));
     static final LoggedTunableNumber pitchMaxAngleRad =
-            new LoggedTunableNumber("Shooter/Pitch/Max Angle Radians", Units.degreesToRadians(85));
+            new LoggedTunableNumber("Shooter/Pitch/Max Angle Radians", Units.degreesToRadians(87));
 
     private static final LoggedTunableNumber yawZeroingVoltage =
             new LoggedTunableNumber("Shooter/Yaw/Zeroing Voltage", 0.67);
@@ -80,13 +85,13 @@ public class Shooter extends SubsystemBase {
     static final LoggedTunableNumber yawZeroingOffset =
             new LoggedTunableNumber("Shooter/Yaw/Zeroing Offset", -0.285);
     static final LoggedTunableNumber yawMinRotations =
-            new LoggedTunableNumber("Shooter/Yaw/Min Rotations", -0.4);
+            new LoggedTunableNumber("Shooter/Yaw/Min Rotations", -0.74);
     static final LoggedTunableNumber yawMaxRotations =
-            new LoggedTunableNumber("Shooter/Yaw/Max Rotations", 0.13);
+            new LoggedTunableNumber("Shooter/Yaw/Max Rotations", 0);
     static final LoggedTunableNumber yawKP = new LoggedTunableNumber("Shooter/Yaw/kP", 120.0);
     static final LoggedTunableNumber yawKD = new LoggedTunableNumber("Shooter/Yaw/kD", 0.0);
-    static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Shooter/Yaw/kS", 0.0);
-    static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Shooter/Yaw/kV", 0.76);
+    static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Shooter/Yaw/kS", 0.08);
+    static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Shooter/Yaw/kV", 5.64);
 
     private Translation3d targetTranslation = null;
     // clearance is defined as an additional horizontal and vertical distance from the target
@@ -350,7 +355,7 @@ public class Shooter extends SubsystemBase {
         Pose2d robotPose = robotPoseSupplier.get();
 
         Translation3d shooterTranslation =
-                new Translation3d(robotPose.getTranslation()).plus(shooterTranslationOnRobot);
+                new Pose3d(robotPose).transformBy(shooterTransformOnRobot).getTranslation();
         // Calculate translation from shooter to hub
         Translation3d shooterToHubTranslation = targetTranslation.minus(shooterTranslation);
 

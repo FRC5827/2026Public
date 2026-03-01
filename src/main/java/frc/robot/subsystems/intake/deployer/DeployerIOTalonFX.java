@@ -6,10 +6,10 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.util.Units;
@@ -38,27 +38,27 @@ public class DeployerIOTalonFX implements DeployerIO {
     private final StatusSignal<Current> deployerMotorCurrentSignal;
     private final StatusSignal<Temperature> deployerMotorTempSignal;
 
+    private final VoltageOut deployerVoltageOut = new VoltageOut(0.0);
+
     public DeployerIOTalonFX() {
-        deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID);
+        deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID, Constants.intakeCANBus);
         // default to up
         positionRequest = new PositionVoltage(Deployer.DEPLOYER_RETRACT_ANGLE_RAD.get());
         deployerConfig = new TalonFXConfiguration();
-        deployerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         deployerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        deployerConfig.ClosedLoopGeneral.ContinuousWrap = true;
         deployerConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
         deployerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         deployerConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
         deployerConfig.Feedback.FeedbackRemoteSensorID = Constants.intakeDeployerCancoder_ID;
-        deployerConfig.Feedback.SensorToMechanismRatio = Deployer.DEPLOYER_GEAR_RATIO;
+        deployerConfig.Feedback.RotorToSensorRatio = Deployer.DEPLOYER_GEAR_RATIO;
         deployerConfig.Voltage.PeakForwardVoltage = 3.0;
         deployerConfig.Voltage.PeakReverseVoltage = -3.0;
         deployerConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         deployerConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         deployerConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-                Deployer.DEPLOYER_MAX_ANGLE.in(Rotations);
-        deployerConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
                 Deployer.DEPLOYER_MIN_ANGLE.in(Rotations);
+        deployerConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+                Deployer.DEPLOYER_MAX_ANGLE.in(Rotations);
 
         deployerConfig.Slot0.kP = Deployer.DEPLOYER_kP.get();
         deployerConfig.Slot0.kD = Deployer.DEPLOYER_kD.get();
@@ -114,7 +114,7 @@ public class DeployerIOTalonFX implements DeployerIO {
 
     @Override
     public void setDeployerVoltage(double voltage) {
-        deployerMotor.setVoltage(voltage);
+        deployerMotor.setControl(deployerVoltageOut.withOutput(voltage));
     }
 
     @Override

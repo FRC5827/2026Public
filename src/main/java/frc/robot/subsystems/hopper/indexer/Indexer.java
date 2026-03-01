@@ -13,7 +13,7 @@ public class Indexer extends SubsystemBase {
     private final IndexerIOInputsAutoLogged inputs;
 
     private final LoggedTunableNumber indexerVoltage =
-            new LoggedTunableNumber("Hopper/Indexer/Voltage", 1.0);
+            new LoggedTunableNumber("Hopper/Indexer/Voltage", 5.0);
 
     public Indexer(IndexerIO io) {
         this.io = io;
@@ -26,7 +26,7 @@ public class Indexer extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Hopper/Indexer", inputs);
         Logger.recordOutput(
-                "PeriodicTime/Hopper/Indexer", (Timer.getFPGATimestamp() - startTime) * 1000);
+                "PerformanceMonitor/Hopper/Indexer", (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 
     public Command runIndexer() {

@@ -92,10 +92,8 @@ public class ShooterIOReal implements ShooterIO {
         yawConfig.Feedback.SensorToMechanismRatio = Shooter.YAW_GEAR_RATIO;
         yawConfig.Slot0.kP = Shooter.yawKP.getAsDouble();
         yawConfig.Slot0.kD = Shooter.yawKD.getAsDouble();
-        yawConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        yawConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Shooter.yawMinRotations.get();
-        yawConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        yawConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Shooter.yawMaxRotations.get();
+        yawConfig.Voltage.PeakForwardVoltage = 6.0;
+        yawConfig.Voltage.PeakReverseVoltage = -6.0;
         PhoenixUtil.tryUntilOk(5, () -> yawMotor.getConfigurator().apply(yawConfig, 0.25));
 
         flywheelMotorVoltage = flywheelMotor.getMotorVoltage();
@@ -233,6 +231,11 @@ public class ShooterIOReal implements ShooterIO {
     }
 
     public void zeroYaw() {
+        yawConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        yawConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Shooter.yawMinRotations.get();
+        yawConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        yawConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Shooter.yawMaxRotations.get();
+        PhoenixUtil.tryUntilOk(5, () -> yawMotor.getConfigurator().apply(yawConfig, 0.25));
         yawMotor.setPosition(Shooter.yawZeroingOffset.get());
     }
 }

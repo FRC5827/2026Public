@@ -23,7 +23,7 @@ public class Deployer extends SubsystemBase {
 
     // PID constants - subject to change
     // for motion profiling
-    static final LoggedTunableNumber DEPLOYER_kP = new LoggedTunableNumber("Intake/Deployer kP", 5);
+    static final LoggedTunableNumber DEPLOYER_kP = new LoggedTunableNumber("Intake/Deployer kP", 1);
     static final LoggedTunableNumber DEPLOYER_kD = new LoggedTunableNumber("Intake/Deployer kD", 0);
 
     // feedforward constants
@@ -43,27 +43,26 @@ public class Deployer extends SubsystemBase {
 
     // target points, 0 is always horizontal by convention
     static final LoggedTunableNumber DEPLOYER_RETRACT_ANGLE_RAD =
-            new LoggedTunableNumber("Intake/DeployerRetractPosition", 1.93); // subject to change
+            new LoggedTunableNumber(
+                    "Intake/DeployerRetractPosition",
+                    Units.rotationsToRadians(-0.409180)); // subject to change
     static final LoggedTunableNumber DEPLOYER_DEPLOY_ANGLE_RAD =
-            new LoggedTunableNumber("Intake/DeployerDeployPosition", 0.25); // subject to change
+            new LoggedTunableNumber(
+                    "Intake/DeployerDeployPosition",
+                    Units.rotationsToRadians(-0.040283)); // subject to change
+    private final LoggedTunableNumber deployerVoltage =
+            new LoggedTunableNumber("Intake/DeployerVoltage", 1.0);
 
     // deployer max/min angles
-    private static final double DEPLOYER_LIMIT_TOLERANCE_RAD = Units.degreesToRadians(3);
     static final Angle DEPLOYER_MAX_ANGLE =
-            Radians.of(
-                    DEPLOYER_RETRACT_ANGLE_RAD.get()
-                            + DEPLOYER_LIMIT_TOLERANCE_RAD); // subject to change
+            Radians.of(DEPLOYER_RETRACT_ANGLE_RAD.get()); // subject to change
     static final Angle DEPLOYER_MIN_ANGLE =
-            Radians.of(
-                    DEPLOYER_DEPLOY_ANGLE_RAD.get()
-                            - DEPLOYER_LIMIT_TOLERANCE_RAD); // subject to change
+            Radians.of(DEPLOYER_DEPLOY_ANGLE_RAD.get()); // subject to change
 
-    static final double DEPLOYER_GEAR_RATIO = 1;
+    static final double DEPLOYER_GEAR_RATIO = 5;
 
     private final DeployerIO io;
     private final DeployerIOInputsAutoLogged inputs;
-    private final LoggedTunableNumber deployerVoltage =
-            new LoggedTunableNumber("Deployer/DeployerVoltage", 0.0);
     private final ArmFeedforward deployerFeedforward;
     private TrapezoidProfile motionProfile;
     private TrapezoidProfile.State profileCurrentState, profileGoalState;
@@ -82,15 +81,15 @@ public class Deployer extends SubsystemBase {
                         new TrapezoidProfile.Constraints(
                                 DEPLOYER_MAX_VELOCITY.get(), DEPLOYER_MAX_ACCELERATION.get()));
 
-        profileCurrentState = new TrapezoidProfile.State(DEPLOYER_RETRACT_ANGLE_RAD.get(), 0.0);
-        profileGoalState = new TrapezoidProfile.State(DEPLOYER_RETRACT_ANGLE_RAD.get(), 0.0);
+        profileCurrentState = new TrapezoidProfile.State(DEPLOYER_DEPLOY_ANGLE_RAD.get(), 0.0);
+        profileGoalState = new TrapezoidProfile.State(DEPLOYER_DEPLOY_ANGLE_RAD.get(), 0.0);
     }
 
     @Override
     public void periodic() {
         double startTime = Timer.getFPGATimestamp();
         io.updateInputs(inputs);
-        Logger.processInputs("Deployer", inputs);
+        Logger.processInputs("Intake/Deployer", inputs);
 
         Logger.recordOutput(
                 "Intake/Deployer/Current Profile Position",
@@ -121,7 +120,7 @@ public class Deployer extends SubsystemBase {
                                 Units.rotationsToRadians(profileGoalState.velocity),
                                 inputs.deployerVelocityRadPerSec,
                                 DEPLOYER_VELOCITY_TOLERANCE_RAD_PER_SEC);
-        Logger.recordOutput("Intake/Deployer/ At Setpoint", atSetpoint);
+        Logger.recordOutput("Intake/Deployer/At Setpoint", atSetpoint);
 
         if (DEPLOYER_kP.hasChanged(this.hashCode()) || DEPLOYER_kD.hasChanged(this.hashCode())) {
             io.updatePID(DEPLOYER_kP.get(), DEPLOYER_kD.get());
@@ -145,7 +144,8 @@ public class Deployer extends SubsystemBase {
             deployerFeedforward.setKg(DEPLOYER_kG.get());
         }
         Logger.recordOutput(
-                "PeriodicTime/Intake/Deployer", (Timer.getFPGATimestamp() - startTime) * 1000);
+                "PerformanceMonitor/Intake/Deployer",
+                (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 
     public void updateProfileStates() {

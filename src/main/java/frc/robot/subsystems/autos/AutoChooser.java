@@ -260,6 +260,6 @@ public class AutoChooser extends SubsystemBase {
             }
         }
         Logger.recordOutput(
-                "PeriodicTime/AutoChooser", (Timer.getFPGATimestamp() - startTime) * 1000);
+                "PerformanceMonitor/AutoChooser", (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 }

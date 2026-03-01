@@ -13,7 +13,7 @@ public class Kicker extends SubsystemBase {
     private final KickerIOInputsAutoLogged inputs;
 
     private final LoggedTunableNumber kickerVoltage =
-            new LoggedTunableNumber("Hopper/Kicker/Voltage", 1.0);
+            new LoggedTunableNumber("Hopper/Kicker/Voltage", 4.0);
 
     public Kicker(KickerIO io) {
         this.io = io;
@@ -26,7 +26,7 @@ public class Kicker extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Hopper/Kicker", inputs);
         Logger.recordOutput(
-                "PeriodicTime/Hopper/Kicker", (Timer.getFPGATimestamp() - startTime) * 1000);
+                "PerformanceMonitor/Hopper/Kicker", (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 
     public Command runKicker() {

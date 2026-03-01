@@ -35,17 +35,19 @@ public final class Constants {
         REPLAY
     }
 
-    public static final CANBus shooterCANBus = new CANBus("canivore");
+    public static final CANBus shooterCANBus = new CANBus("rio");
     public static final int shooterFlywheelMotorCanbus_ID = 16;
     public static final int shooterFlywheelMotorFollowerCanbus_ID = 17;
     public static final int shooterPitchServo1PWM_ID = 0;
     public static final int shooterPitchServo2PWM_ID = 1;
     public static final int shooterYawMotorCanbus_ID = 18;
-    public static final int shooterYawLimitSwitchDIO = 0;
+    public static final int shooterYawLimitSwitchDIO = 1;
 
-    public static final int hopperIndexerMotorOpenCanbus_ID = 20; // need to change
-    public static final int hopperKickerMotorOpenCanbus_ID = 21; // need to change
+    public static final int hopperIndexerMotorOpenCanbus_ID = 20;
+    public static final int hopperKickerMotorOpenCanbus_ID = 19;
 
+    public static final CANBus intakeCANBus = new CANBus("canivore");
     public static final int intakeDeployerMotorCanbus_ID = 22;
     public static final int intakeDeployerCancoder_ID = 23;
+    public static final int intakeFlywheelMotorCanbus_ID = 21;
 }
