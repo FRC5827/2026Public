@@ -14,6 +14,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -218,20 +219,26 @@ public class RobotContainer {
     private void registerNamedCommands() {
         // Named commands are commands in PathPlanner that are given a name so they can be directly
         // used in an autos in PathPlanner.
-        // NamedCommands.registerCommand(
-        //         "Shoot",
-        //         shooter.aimAtHub()
-        //                 .alongWith(
-        //                         Commands.waitUntil(shooter::isAimedAtTarget)
-        //                                 .andThen(shooter.shootAtTarget()))
-        //                 .alongWith(
-        //                         Commands.waitUntil(shooter::shooterRunningAtVelocity)
-        //                                 .andThen(
-        //                                         hopperIndexer
-        //                                                 .runIndexer()
-        //                                                 .alongWith(hopperKicker.runKicker()))));
-        NamedCommands.registerCommand("Shoot", Commands.print("Shooting!"));
+        NamedCommands.registerCommand(
+                "Shoot",
+                RobotBase.isReal()
+                        ? shooter.aimAtHub()
+                                .alongWith(
+                                        Commands.waitUntil(shooter::isAimedAtTarget)
+                                                .andThen(shooter.shootAtTarget()))
+                                .alongWith(
+                                        Commands.waitUntil(shooter::shooterRunningAtVelocity)
+                                                .andThen(
+                                                        hopperIndexer
+                                                                .runIndexer()
+                                                                .alongWith(
+                                                                        hopperKicker.runKicker())))
+                        : Commands.waitSeconds(5.0));
+        // Yes I know they're the same thing, but we need to tune the timeout and they'll be
+        // different afterwards probably, as the timeouts for real and sim are for different
+        // purposes
         NamedCommands.registerCommand("Intake", intakeFlywheel.runIntake().withTimeout(2.0));
+        // We don't have a climber yet
         NamedCommands.registerCommand("Climb", Commands.print("CLIMB!"));
     }
 

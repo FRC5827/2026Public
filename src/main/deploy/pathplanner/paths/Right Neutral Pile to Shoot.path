@@ -32,12 +32,12 @@
     },
     {
       "anchor": {
-        "x": 3.2210333333333336,
-        "y": 2.9062888888888883
+        "x": 2.3,
+        "y": 3.32
       },
       "prevControl": {
-        "x": 2.2655397727272724,
-        "y": 0.5718465909090913
+        "x": 1.3445064393939385,
+        "y": 0.9855577020202029
       },
       "nextControl": null,
       "isLocked": false,
@@ -58,7 +58,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": -45.0
   },
   "reversed": false,
   "folder": "Stage 2",
