@@ -68,7 +68,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
  */
 public class RobotContainer {
     // Subsystems
-    private final Vision vision;
     private final Drive drive;
     private final Flywheel intakeFlywheel;
     private final Targeting targeting;
@@ -107,13 +106,13 @@ public class RobotContainer {
                                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                                 new ModuleIOTalonFX(TunerConstants.BackRight));
 
-                vision =
-                        new Vision(
-                                drive::addVisionMeasurement,
-                                new VisionIOPhotonVision(cameraFRName, robotToCameraFR),
-                                new VisionIOPhotonVision(cameraFLName, robotToCameraFL),
-                                new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
-                                new VisionIOPhotonVision(cameraBLName, robotToCameraBL));
+                // Initialize vision (local scope only, not stored)
+                new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIOPhotonVision(cameraFRName, robotToCameraFR),
+                        new VisionIOPhotonVision(cameraFLName, robotToCameraFL),
+                        new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
+                        new VisionIOPhotonVision(cameraBLName, robotToCameraBL));
 
                 intakeDeployer = new Deployer(new DeployerIOTalonFX());
 
@@ -139,25 +138,25 @@ public class RobotContainer {
                                 new ModuleIOSim(TunerConstants.BackRight));
 
                 if (Constants.simWithVision) {
-                    vision =
-                            new Vision(
-                                    drive::addVisionMeasurement,
-                                    new VisionIOPhotonVisionSim(
-                                            cameraFRName, robotToCameraFR, drive::getPose),
-                                    new VisionIOPhotonVisionSim(
-                                            cameraFLName, robotToCameraFL, drive::getPose),
-                                    new VisionIOPhotonVisionSim(
-                                            cameraBRName, robotToCameraBR, drive::getPose),
-                                    new VisionIOPhotonVisionSim(
-                                            cameraBLName, robotToCameraBL, drive::getPose));
+                    // Initialize vision (local scope only, not stored)
+                    new Vision(
+                            drive::addVisionMeasurement,
+                            new VisionIOPhotonVisionSim(
+                                    cameraFRName, robotToCameraFR, drive::getPose),
+                            new VisionIOPhotonVisionSim(
+                                    cameraFLName, robotToCameraFL, drive::getPose),
+                            new VisionIOPhotonVisionSim(
+                                    cameraBRName, robotToCameraBR, drive::getPose),
+                            new VisionIOPhotonVisionSim(
+                                    cameraBLName, robotToCameraBL, drive::getPose));
                 } else {
-                    vision =
-                            new Vision(
-                                    drive::addVisionMeasurement,
-                                    new VisionIO() {},
-                                    new VisionIO() {},
-                                    new VisionIO() {},
-                                    new VisionIO() {});
+                    // Initialize vision (local scope only, not stored)
+                    new Vision(
+                            drive::addVisionMeasurement,
+                            new VisionIO() {},
+                            new VisionIO() {},
+                            new VisionIO() {},
+                            new VisionIO() {});
                 }
 
                 intakeDeployer = new Deployer(new DeployerIOSim());
@@ -181,13 +180,13 @@ public class RobotContainer {
                                 new ModuleIO() {},
                                 new ModuleIO() {});
 
-                vision =
-                        new Vision(
-                                drive::addVisionMeasurement,
-                                new VisionIO() {},
-                                new VisionIO() {},
-                                new VisionIO() {},
-                                new VisionIO() {});
+                // Initialize vision (local scope only, not stored)
+                new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {},
+                        new VisionIO() {});
 
                 intakeDeployer = new Deployer(new DeployerIO() {});
                 intakeFlywheel = new Flywheel(new FlywheelIO() {});
@@ -217,21 +216,22 @@ public class RobotContainer {
 
     private void registerNamedCommands() {
         // Named commands are commands in PathPlanner that are given a name so they can be directly
-        // used in an autos in PathPlanner.
-        // NamedCommands.registerCommand(
-        //         "Shoot",
-        //         shooter.aimAtHub()
-        //                 .alongWith(
-        //                         Commands.waitUntil(shooter::isAimedAtTarget)
-        //                                 .andThen(shooter.shootAtTarget()))
-        //                 .alongWith(
-        //                         Commands.waitUntil(shooter::shooterRunningAtVelocity)
-        //                                 .andThen(
-        //                                         hopperIndexer
-        //                                                 .runIndexer()
-        //                                                 .alongWith(hopperKicker.runKicker()))));
-        NamedCommands.registerCommand("Shoot", Commands.print("Shooting!"));
+        // used in autos in PathPlanner. These should use only direct subsystem commands, not
+        // Superstructure (which is reserved for button bindings and manual control).
+
+        // Shoot command: aim at hub, wait for shooter to reach velocity, then shoot with hopper
+        NamedCommands.registerCommand(
+                "Shoot",
+                turret.aimAtTarget()
+                        .alongWith(Commands.waitUntil(shooter::isShooterAtVelocity))
+                        .andThen(
+                                Commands.parallel(
+                                        hopperIndexer.runIndexer(), hopperKicker.runKicker())));
+
+        // Intake command: run intake flywheel
         NamedCommands.registerCommand("Intake", intakeFlywheel.runIntake().withTimeout(2.0));
+
+        // Climb command: placeholder for future implementation
         NamedCommands.registerCommand("Climb", Commands.print("CLIMB!"));
     }
 
