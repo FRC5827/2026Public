@@ -28,8 +28,6 @@ public class DeployerIOTalonFX implements DeployerIO {
     private final TalonFX deployerMotor;
     private final TalonFXConfiguration deployerConfig;
 
-    private final PositionVoltage positionRequest;
-
     private final StatusSignal<Double> deployerTargetSignal;
     private final StatusSignal<Double> deployerErrorSignal;
     private final StatusSignal<Angle> deployerPositionSignal;
@@ -39,11 +37,10 @@ public class DeployerIOTalonFX implements DeployerIO {
     private final StatusSignal<Temperature> deployerMotorTempSignal;
 
     private final VoltageOut deployerVoltageOut = new VoltageOut(0.0);
+    private final PositionVoltage positionRequest = new PositionVoltage(0.0);
 
     public DeployerIOTalonFX() {
         deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID, Constants.intakeCANBus);
-        // default to up
-        positionRequest = new PositionVoltage(Deployer.DEPLOYER_RETRACT_ANGLE_RAD.get());
         deployerConfig = new TalonFXConfiguration();
         deployerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         deployerConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
@@ -122,15 +119,18 @@ public class DeployerIOTalonFX implements DeployerIO {
             double targetPosition, double targetVelocity, double feedforwardValue) {
         deployerMotor.setControl(
                 positionRequest
-                        .withPosition(targetPosition)
-                        .withVelocity(targetVelocity)
+                        .withPosition(Units.radiansToRotations(targetPosition))
+                        .withVelocity(Units.radiansToRotations(targetVelocity))
                         .withFeedForward(feedforwardValue));
     }
 
     @Override
     public void setDeployerPosition(double targetPosition) {
         deployerMotor.setControl(
-                positionRequest.withPosition(targetPosition).withVelocity(0).withFeedForward(0));
+                positionRequest
+                        .withPosition(Units.radiansToRotations(targetPosition))
+                        .withVelocity(0)
+                        .withFeedForward(0));
     }
 
     @Override

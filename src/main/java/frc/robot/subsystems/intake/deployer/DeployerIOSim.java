@@ -32,10 +32,9 @@ public class DeployerIOSim implements DeployerIO {
                         Deployer.DEPLOYER_MIN_ANGLE.in(Radians),
                         Deployer.DEPLOYER_MAX_ANGLE.in(Radians),
                         false,
-                        Deployer.DEPLOYER_RETRACT_ANGLE_RAD.get());
+                        Deployer.DEPLOYER_DEPLOY_ANGLE_RAD.get());
         deployerController =
                 new PIDController(Deployer.DEPLOYER_kP.get(), 0, Deployer.DEPLOYER_kD.get());
-        deployerController.enableContinuousInput(-0.5, 0.5);
     }
 
     @Override
@@ -45,9 +44,7 @@ public class DeployerIOSim implements DeployerIO {
             appliedVolts = requestedDeployerVoltage;
         } else {
             appliedVolts =
-                    deployerController.calculate(
-                                    Units.radiansToRotations(inputs.deployerPositionRadians),
-                                    closedLoopPosition)
+                    deployerController.calculate(inputs.deployerPositionRadians, closedLoopPosition)
                             + feedforwardVoltage;
         }
 
@@ -70,15 +67,15 @@ public class DeployerIOSim implements DeployerIO {
     @Override
     public void setDeployerState(
             double targetPosition, double targetVelocity, double feedforwardValue) {
-        closedLoopPosition = targetPosition;
-        closedLoopVelocity = targetVelocity;
+        closedLoopPosition = Units.radiansToRotations(targetPosition);
+        closedLoopVelocity = Units.radiansToRotations(targetVelocity);
         feedforwardVoltage = feedforwardValue;
         openLoop = false;
     }
 
     @Override
     public void setDeployerPosition(double targetPosition) {
-        closedLoopPosition = targetPosition;
+        closedLoopPosition = Units.radiansToRotations(targetPosition);
         closedLoopVelocity = 0;
         feedforwardVoltage = 0;
         openLoop = false;

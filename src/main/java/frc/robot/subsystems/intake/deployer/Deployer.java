@@ -18,7 +18,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Deployer extends SubsystemBase {
 
-    static final double DEPLOYER_TOLERANCE_RAD = Units.degreesToRadians(5);
+    static final double DEPLOYER_POSITION_TOLERANCE_RAD = Units.degreesToRadians(5);
     static final double DEPLOYER_VELOCITY_TOLERANCE_RAD_PER_SEC = Units.degreesToRadians(5);
 
     // PID constants - subject to change
@@ -55,9 +55,9 @@ public class Deployer extends SubsystemBase {
 
     // deployer max/min angles
     static final Angle DEPLOYER_MAX_ANGLE =
-            Radians.of(DEPLOYER_RETRACT_ANGLE_RAD.get()); // subject to change
-    static final Angle DEPLOYER_MIN_ANGLE =
             Radians.of(DEPLOYER_DEPLOY_ANGLE_RAD.get()); // subject to change
+    static final Angle DEPLOYER_MIN_ANGLE =
+            Radians.of(DEPLOYER_RETRACT_ANGLE_RAD.get()); // subject to change
 
     static final double DEPLOYER_GEAR_RATIO = 5;
 
@@ -92,11 +92,9 @@ public class Deployer extends SubsystemBase {
         Logger.processInputs("Intake/Deployer", inputs);
 
         Logger.recordOutput(
-                "Intake/Deployer/Current Profile Position",
-                Units.rotationsToRadians(profileCurrentState.position));
+                "Intake/Deployer/Current Profile Position", profileCurrentState.position);
         Logger.recordOutput(
-                "Intake/Deployer/Current Profile Velocity",
-                Units.rotationsToRadians(profileCurrentState.velocity));
+                "Intake/Deployer/Current Profile Velocity", profileCurrentState.velocity);
 
         if (doMotionProfiling) {
             var profileNewState =
@@ -113,11 +111,11 @@ public class Deployer extends SubsystemBase {
 
         atSetpoint =
                 MathUtil.isNear(
-                                Units.rotationsToRadians(profileGoalState.position),
+                                profileGoalState.position,
                                 inputs.deployerPositionRadians,
-                                DEPLOYER_TOLERANCE_RAD)
+                                DEPLOYER_POSITION_TOLERANCE_RAD)
                         && MathUtil.isNear(
-                                Units.rotationsToRadians(profileGoalState.velocity),
+                                profileGoalState.velocity,
                                 inputs.deployerVelocityRadPerSec,
                                 DEPLOYER_VELOCITY_TOLERANCE_RAD_PER_SEC);
         Logger.recordOutput("Intake/Deployer/At Setpoint", atSetpoint);
@@ -149,8 +147,8 @@ public class Deployer extends SubsystemBase {
     }
 
     public void updateProfileStates() {
-        profileCurrentState.position = Units.radiansToRotations(inputs.deployerPositionRadians);
-        profileCurrentState.velocity = Units.radiansToRotations(inputs.deployerVelocityRadPerSec);
+        profileCurrentState.position = inputs.deployerPositionRadians;
+        profileCurrentState.velocity = inputs.deployerVelocityRadPerSec;
     }
 
     public void setBrakeMode(boolean brake) {
@@ -165,6 +163,7 @@ public class Deployer extends SubsystemBase {
                 });
     }
 
+    // Open Loop Control
     public Command deployerUp() {
         return this.startEnd(
                 () -> {
@@ -174,7 +173,17 @@ public class Deployer extends SubsystemBase {
                 () -> io.setDeployerVoltage(0));
     }
 
-    public Command stowDeployer() {
+    public Command deployerDown() {
+        return this.startEnd(
+                () -> {
+                    io.setDeployerVoltage(-deployerVoltage.getAsDouble());
+                    doMotionProfiling = false;
+                },
+                () -> io.setDeployerVoltage(0));
+    }
+
+    // Closed Loop control
+    public Command retractDeployer() {
         return this.runOnce(
                         () -> {
                             profileGoalState.position = DEPLOYER_RETRACT_ANGLE_RAD.get();
@@ -187,17 +196,10 @@ public class Deployer extends SubsystemBase {
     public Command deployDeployer() {
         return this.runOnce(
                         () -> {
-                            profileGoalState.position =
-                                    Units.radiansToRotations(DEPLOYER_DEPLOY_ANGLE_RAD.get());
+                            profileGoalState.position = DEPLOYER_DEPLOY_ANGLE_RAD.get();
                             atSetpoint = false;
                             doMotionProfiling = true;
                         })
                 .andThen(Commands.waitUntil(() -> atSetpoint));
-    }
-
-    public boolean isDeployerRetracted() {
-        return profileGoalState.position
-                        == Units.radiansToRotations(DEPLOYER_RETRACT_ANGLE_RAD.get())
-                && atSetpoint;
     }
 }

@@ -282,10 +282,11 @@ public class RobotContainer {
 
         controller
                 .povDown()
-                .onTrue(intakeDeployer.stowDeployer())
+                .onTrue(intakeDeployer.retractDeployer())
                 .onFalse(intakeDeployer.deployDeployer());
 
         controller.rightBumper().whileTrue(intakeDeployer.deployerUp());
+        controller.leftBumper().whileTrue(intakeDeployer.deployerDown());
     }
 
     /**
