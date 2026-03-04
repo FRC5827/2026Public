@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.autos.AutoChooser;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -49,6 +50,11 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
 import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.Targeting;
+import frc.robot.subsystems.shooter.Turret;
+import frc.robot.subsystems.shooter.TurretIO;
+import frc.robot.subsystems.shooter.TurretIOReal;
+import frc.robot.subsystems.shooter.TurretIOSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
@@ -65,10 +71,13 @@ public class RobotContainer {
     private final Vision vision;
     private final Drive drive;
     private final Flywheel intakeFlywheel;
+    private final Targeting targeting;
     private final Shooter shooter;
     private final Deployer intakeDeployer;
     private final Indexer hopperIndexer;
     private final Kicker hopperKicker;
+    private final Turret turret;
+    private final Superstructure superstructure;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -110,7 +119,9 @@ public class RobotContainer {
 
                 intakeFlywheel = new Flywheel(new FlywheelIOTalonFX());
 
-                shooter = new Shooter(new ShooterIOReal(), () -> drive.getPose());
+                targeting = new Targeting(drive::getPose);
+                shooter = new Shooter(new ShooterIOReal(), targeting);
+                turret = new Turret(new TurretIOReal(), targeting);
 
                 hopperIndexer = new Indexer(new IndexerIOTalonFX());
                 hopperKicker = new Kicker(new KickerIOTalonFX());
@@ -148,10 +159,14 @@ public class RobotContainer {
                                     new VisionIO() {},
                                     new VisionIO() {});
                 }
-                shooter = new Shooter(new ShooterIOSim(), () -> drive.getPose());
 
                 intakeDeployer = new Deployer(new DeployerIOSim());
                 intakeFlywheel = new Flywheel(new FlywheelIOSim());
+
+                targeting = new Targeting(drive::getPose);
+
+                shooter = new Shooter(new ShooterIOSim(), targeting);
+                turret = new Turret(new TurretIOSim(), targeting);
 
                 hopperIndexer = new Indexer(new IndexerIOSim());
                 hopperKicker = new Kicker(new KickerIOSim());
@@ -175,16 +190,21 @@ public class RobotContainer {
                                 new VisionIO() {});
 
                 intakeDeployer = new Deployer(new DeployerIO() {});
-
                 intakeFlywheel = new Flywheel(new FlywheelIO() {});
 
-                shooter = new Shooter(new ShooterIO() {}, () -> drive.getPose());
+                targeting = new Targeting(drive::getPose);
+                shooter = new Shooter(new ShooterIO() {}, targeting);
+                turret = new Turret(new TurretIO() {}, targeting);
 
                 hopperIndexer = new Indexer(new IndexerIO() {});
                 hopperKicker = new Kicker(new KickerIO() {});
 
                 break;
         }
+
+        // Initialize superstructure
+        superstructure =
+                new Superstructure(shooter, targeting, turret, hopperKicker, hopperIndexer, drive);
 
         // Set up auto chooser
         autoChooser = new AutoChooser(drive);
@@ -262,20 +282,8 @@ public class RobotContainer {
         controller.povUp().whileTrue(intakeFlywheel.runReverse());
 
         // shoot controls
-        shooter.setDefaultCommand(shooter.aimAtHub());
-        controller
-                .rightTrigger()
-                .whileTrue(
-                        Commands.waitUntil(shooter::isAimedAtTarget)
-                                .andThen(shooter.shootAtTarget())
-                                .alongWith(
-                                        Commands.waitUntil(shooter::shooterRunningAtVelocity)
-                                                .andThen(
-                                                        hopperIndexer
-                                                                .runIndexer()
-                                                                .alongWith(
-                                                                        hopperKicker
-                                                                                .runKicker()))));
+        turret.setDefaultCommand(superstructure.aimAtHub());
+        controller.rightTrigger().whileTrue(superstructure.aimAndShoot());
 
         // Hopper and Kicker controls
         controller
@@ -290,6 +298,17 @@ public class RobotContainer {
 
         controller.rightBumper().whileTrue(intakeDeployer.deployerUp());
         controller.leftBumper().whileTrue(intakeDeployer.deployerDown());
+
+        // temporary testing command for tuning shooter
+        controller
+                .rightStick()
+                .whileTrue(
+                        targeting
+                                .runOnce(() -> targeting.setTargetManual())
+                                .finallyDo(() -> targeting.clearTarget())
+                                .alongWith(turret.aimAtTarget())
+                                .alongWith(superstructure.shootAtTarget())
+                                .alongWith(superstructure.runKickerAndIndexer()));
     }
 
     /**

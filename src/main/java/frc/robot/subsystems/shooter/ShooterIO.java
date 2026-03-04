@@ -5,46 +5,22 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ShooterIO {
     @AutoLog
     public static class ShooterIOInputs {
-        public boolean flywheelConnected = false;
-        public boolean yawConnected = false;
+        public boolean shooterConnected = false;
 
-        public double flywheelMotorVoltage = 0.0;
-        public double flywheelMotorVoltageFollower = 0.0;
-        public double flywheelMotorCurrent = 0.0;
-        public double flywheelMotorCurrentFollower = 0.0;
-        public double flywheelMotorTemp = 0.0;
-        public double flywheelMotorTempFollower = 0.0;
-        public double flywheelMotorVelocityMPS = 0.0;
-
-        public double pitchServoRequestedPosition = 0.0;
-
-        public double yawMotorVoltage = 0.0;
-        public double yawMotorCurrent = 0.0;
-        public double yawMotorTemperature = 0.0;
-        public double yawTurretPositionRotations = 0.0;
-        public boolean yawLimitSwitchPressed = false;
+        public double shooterMotorVoltage = 0.0;
+        public double shooterMotorVoltageFollower = 0.0;
+        public double shooterMotorCurrent = 0.0;
+        public double shooterMotorCurrentFollower = 0.0;
+        public double shooterMotorTemp = 0.0;
+        public double shooterMotorTempFollower = 0.0;
+        public double shooterMotorVelocityMPS = 0.0;
     }
 
     public default void updateInputs(ShooterIOInputs inputs) {}
 
-    public default void setFlywheelVoltage(double newVoltage) {}
+    public default void setShooterVoltage(double newVoltage) {}
 
-    public default void setFlyWheelVelocity(double newVelocity, double feedforwardValue) {}
+    public default void setShooterVelocity(double newVelocity, double feedforwardValue) {}
 
-    public default void setPitchAngle(double newAngle) {}
-
-    public default void setYawVoltage(double newVoltage) {}
-
-    public default void setYawPosition(double newPosition) {}
-
-    public default void setYawState(
-            double newPosition, double newVelocity, double feedforwardValue) {}
-
-    public default void updateFlywheelPID(double kP, double kD) {}
-
-    public default void updateYawPID(double kP, double kD) {}
-
-    public default void updateYawLimits(double minRotations, double maxRotations) {}
-
-    public default void zeroYaw() {}
+    public default void updateShooterPID(double kP, double kD) {}
 }
