@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.304,
+        "x": 3.3036553030303026,
         "y": 4.749223484848485
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.1111553030303032,
-        "y": 7.813740530303029
+        "x": 2.9086222222280127,
+        "y": 7.899827777780121
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
     },
     {
       "anchor": {
-        "x": 4.449734848484848,
-        "y": 7.514763257575758
+        "x": 4.44142992423721,
+        "y": 7.4815435606112395
       },
       "prevControl": {
-        "x": 4.1997952058010215,
-        "y": 7.509270078616112
+        "x": 4.191431272446771,
+        "y": 7.482364598347036
       },
       "nextControl": {
-        "x": 7.472727272732487,
-        "y": 7.581202651509972
+        "x": 5.8393207070596995,
+        "y": 7.47695265152033
       },
       "isLocked": false,
       "linkedName": "LeftTrenchPass"
@@ -64,7 +64,7 @@
   "folder": "Stage 1",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": -45.0
   },
   "useDefaultConstraints": true
 }

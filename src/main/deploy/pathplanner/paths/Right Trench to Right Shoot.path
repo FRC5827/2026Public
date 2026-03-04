@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.0,
-        "y": 0.55
+        "x": 4.10092803030303,
+        "y": 0.4804924242424249
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.7371497474747484,
-        "y": 0.8191520202020185
+        "x": 2.8380777777777784,
+        "y": 0.7496444444444433
       },
       "isLocked": false,
       "linkedName": "Right Trench"
     },
     {
       "anchor": {
-        "x": 2.3,
-        "y": 3.32
+        "x": 3.2210333333333336,
+        "y": 2.9062888888888883
       },
       "prevControl": {
-        "x": 2.590672348484848,
-        "y": 2.149005681818181
+        "x": 3.511705681818182,
+        "y": 1.7352945707070695
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -45.0
+    "rotation": 45.0
   },
   "reversed": false,
   "folder": "Stage 0",

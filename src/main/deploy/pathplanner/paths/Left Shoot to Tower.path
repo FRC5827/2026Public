@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.304,
+        "x": 3.3036553030303026,
         "y": 4.749223484848485
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1379015151515155,
+        "x": 3.1375568181818183,
         "y": 3.694498106060606
       },
       "isLocked": false,
@@ -20,8 +20,8 @@
         "y": 3.636363636363636
       },
       "prevControl": {
-        "x": 2.033001893939394,
-        "y": 3.7609375
+        "x": 2.522992424242424,
+        "y": 3.594839015151516
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "Stage 3",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": -45.0
   },
   "useDefaultConstraints": true
 }
