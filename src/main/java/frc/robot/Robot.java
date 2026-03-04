@@ -99,6 +99,9 @@ public class Robot extends LoggedRobot {
         // the Command-based framework to work.
         CommandScheduler.getInstance().run();
 
+        // Check trench alignment and trigger controller rumble if aligned
+        robotContainer.checkTrenchAlignment();
+
         // Log total loop time
         Logger.recordOutput(
                 "PerformanceMonitor/LoopCycleMs",
