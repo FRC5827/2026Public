@@ -94,6 +94,14 @@ public class Targeting extends SubsystemBase {
         this.canAimAtTarget = true;
     }
 
+    public void lowerForTrench() {
+        this.pitchAngle = Turret.pitchMinAngleRad.get();
+        this.shooterVelocity = 0.0;
+        this.yawVelocity = 0.0;
+        this.trajectoryCoefficients = null;
+        this.canAimAtTarget = false;
+    }
+
     /** Clears the active target; aiming calculations stop until a new target is set. */
     public void clearTarget() {
         this.targetTranslation = null;
@@ -119,6 +127,8 @@ public class Targeting extends SubsystemBase {
 
         if (hasTarget()) {
             update(robotPose);
+        } else {
+            lowerForTrench();
         }
 
         // Always log so AdvantageKit captures cleared state too
@@ -155,6 +165,16 @@ public class Targeting extends SubsystemBase {
 
     public boolean canAimAtTarget() {
         return canAimAtTarget;
+    }
+
+    public double getAirTimeToTarget() {
+        if (trajectoryCoefficients == null) {
+            return 0;
+        }
+        // Time to reach target is time to reach horizontal distance at horizontal velocity
+        double horizontalVelocity = shooterVelocity * Math.cos(pitchAngle);
+        double horizontalDistance = targetTranslation.toTranslation2d().getNorm();
+        return horizontalDistance / horizontalVelocity;
     }
 
     // --- Internal computation ---

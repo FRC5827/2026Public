@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -14,6 +15,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.Targeting;
 import frc.robot.subsystems.shooter.Turret;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.GameTimeUtil;
 import frc.robot.util.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.Logger;
@@ -54,12 +56,18 @@ public final class Superstructure extends SubsystemBase {
     public Command aimAtHub() {
         return targeting
                 .runOnce(
-                        () ->
+                        () -> {
+                            double airTime = targeting.getAirTimeToTarget();
+                            if (GameTimeUtil.isHubActive(airTime + DriverStation.getMatchTime())) {
                                 targeting.setTarget(
                                         AllianceFlipUtil.shouldFlip()
                                                 ? FieldConstants.Hub.oppInnerCenterPoint
                                                 : FieldConstants.Hub.innerCenterPoint,
-                                        new Translation2d(hubEdgeDX.get(), hubEdgeDY.get())))
+                                        new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
+                            } else {
+                                targeting.clearTarget();
+                            }
+                        })
                 .andThen(turret.aimAtTarget())
                 .finallyDo(() -> targeting.clearTarget());
     }
