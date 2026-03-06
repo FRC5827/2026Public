@@ -12,12 +12,15 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.FieldConstants;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.function.Supplier;
 
@@ -49,6 +52,13 @@ public class Targeting extends SubsystemBase {
     static final LoggedTunableNumber manualTargetDistanceMeters =
             new LoggedTunableNumber("Targeting/Manual/Target Distance Meters", 1.0);
 
+    static final LoggedTunableNumber distanceFromCornerToCornerShot =
+            new LoggedTunableNumber("Targeting/Distance From Corner To Corner Shot", 0.5);
+
+    public static LoggedDashboardChooser<Boolean> overrideTimeRestrictions;
+    public static LoggedDashboardChooser<Boolean>
+            targetCornerIsLeftCorner; // Depot corner, Outpost Corner
+
     private final Supplier<Pose2d> robotPoseSupplier;
 
     // --- Target (null = no active target) ---
@@ -71,6 +81,16 @@ public class Targeting extends SubsystemBase {
         this.robotPoseSupplier = robotPoseSupplier;
         this.lastPose = robotPoseSupplier.get();
         this.lastPoseTimestamp = Timer.getFPGATimestamp();
+
+        overrideTimeRestrictions =
+                new LoggedDashboardChooser<>("Override Time Restrictions", new SendableChooser<>());
+        overrideTimeRestrictions.addDefaultOption("False", false);
+        overrideTimeRestrictions.addOption("True", true);
+
+        targetCornerIsLeftCorner =
+                new LoggedDashboardChooser<>("Chosen Corner For Passing", new SendableChooser<>());
+        targetCornerIsLeftCorner.addDefaultOption("Left Corner", true);
+        targetCornerIsLeftCorner.addOption("Right Corner", false);
     }
 
     /**
@@ -108,6 +128,50 @@ public class Targeting extends SubsystemBase {
         this.targetClearance = null;
         this.canAimAtTarget = false;
         this.shooterVelocity = 0.0;
+    }
+
+    public void aimAtCorner() {
+        double oneOverRoot2 = 1 / Math.sqrt(2); // For 45 degree angle to corner
+        Translation3d targetTranslation =
+                new Translation3d(
+                        distanceFromCornerToCornerShot.get() * oneOverRoot2,
+                        !targetCornerIsLeftCorner.get()
+                                ? distanceFromCornerToCornerShot.get() * oneOverRoot2
+                                : FieldConstants.fieldWidth
+                                        - distanceFromCornerToCornerShot.get() * oneOverRoot2,
+                        0);
+
+        double distanceFromTrench;
+        double trenchHeight;
+        Pose2d robotPose = robotPoseSupplier.get();
+        if (targetCornerIsLeftCorner.get()) {
+            distanceFromTrench =
+                    robotPose
+                            .getTranslation()
+                            .getDistance(
+                                    new Translation2d(
+                                            FieldConstants.LinesVertical.hubCenter,
+                                            FieldConstants.fieldWidth
+                                                    - FieldConstants.LeftTrench.width));
+            trenchHeight = FieldConstants.LeftTrench.height;
+        } else {
+            distanceFromTrench =
+                    robotPose
+                            .getTranslation()
+                            .getDistance(
+                                    new Translation2d(
+                                            FieldConstants.LinesVertical.hubCenter,
+                                            FieldConstants.RightTrench.width));
+            trenchHeight = FieldConstants.RightTrench.height;
+        }
+
+        targetTranslation = AllianceFlipUtil.apply(targetTranslation);
+
+        setTarget(
+                targetTranslation,
+                new Translation2d(
+                        distanceFromTrench,
+                        trenchHeight + Units.inchesToMeters(5.91))); // atleast 0.5 balls above
     }
 
     /** Returns {@code true} if a target is currently set. */

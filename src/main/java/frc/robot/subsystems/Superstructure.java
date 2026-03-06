@@ -58,7 +58,8 @@ public final class Superstructure extends SubsystemBase {
                 .runOnce(
                         () -> {
                             double airTime = targeting.getAirTimeToTarget();
-                            if (GameTimeUtil.isHubActive(airTime + DriverStation.getMatchTime())) {
+                            if (GameTimeUtil.isHubActive(airTime + DriverStation.getMatchTime())
+                                    && !Targeting.overrideTimeRestrictions.get()) {
                                 targeting.setTarget(
                                         AllianceFlipUtil.shouldFlip()
                                                 ? FieldConstants.Hub.oppInnerCenterPoint
@@ -70,6 +71,10 @@ public final class Superstructure extends SubsystemBase {
                         })
                 .andThen(turret.aimAtTarget())
                 .finallyDo(() -> targeting.clearTarget());
+    }
+
+    public Command aimAtCorner() {
+        return targeting.runOnce(() -> targeting.aimAtCorner());
     }
 
     public Command shootAtTarget() {
