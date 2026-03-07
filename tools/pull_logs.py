@@ -11,7 +11,9 @@ and manages USB space with a smart retention algorithm:
 Usage:
     python tools/pull_logs.py                # download new logs, clean up if needed
     python tools/pull_logs.py --list         # list logs on the roboRIO USB
+    python tools/pull_logs.py --latest       # download only the most recent log
     python tools/pull_logs.py --all          # force re-download all logs
+    python tools/pull_logs.py --wipe          # delete all logs from roboRIO USB
     python tools/pull_logs.py --no-cleanup   # download without cleaning USB
     python tools/pull_logs.py --keep 20      # keep last 20 logs on USB (default 10)
     python tools/pull_logs.py --min-free 1024 # minimum free MB on USB (default 512)
@@ -289,8 +291,9 @@ def do_list(host):
     print_matches([f for f, _ in logs])
 
 
-def do_pull(host, force_all=False, cleanup=True, keep_recent=DEFAULT_KEEP_RECENT,
-            min_free_mb=DEFAULT_MIN_FREE_MB, show_matches=True):
+def do_pull(host, force_all=False, latest_only=False, cleanup=True,
+            keep_recent=DEFAULT_KEEP_RECENT, min_free_mb=DEFAULT_MIN_FREE_MB,
+            show_matches=True):
     """Download new logs and optionally clean up USB."""
     os.makedirs(LOCAL_LOG_DIR, exist_ok=True)
 
@@ -302,7 +305,9 @@ def do_pull(host, force_all=False, cleanup=True, keep_recent=DEFAULT_KEEP_RECENT
     # Determine which logs need downloading
     local_files = set(os.listdir(LOCAL_LOG_DIR)) if os.path.exists(LOCAL_LOG_DIR) else set()
 
-    if force_all:
+    if latest_only:
+        to_download = [remote_logs[-1]]  # already sorted by filename (timestamp)
+    elif force_all:
         to_download = remote_logs
     else:
         to_download = [(f, s) for f, s in remote_logs if f not in local_files]
@@ -393,6 +398,35 @@ def do_pull(host, force_all=False, cleanup=True, keep_recent=DEFAULT_KEEP_RECENT
     print(f"  Estimated free space: {free_mb + freed_mb:.0f} MB")
 
 
+def do_wipe(host):
+    """Delete all .wpilog files from the roboRIO USB."""
+    logs = list_remote_logs(host)
+    if not logs:
+        print("No .wpilog files found on USB.")
+        return
+
+    print(f"\nAbout to delete {len(logs)} log(s) from {REMOTE_LOG_DIR}:")
+    for filename, size in logs:
+        print(f"  {filename} ({format_size(size)})")
+
+    confirm = input(f"\nDelete all {len(logs)} logs? [y/N] ").strip().lower()
+    if confirm != "y":
+        print("Aborted.")
+        return
+
+    deleted = 0
+    for filename, size in logs:
+        remote_path = f"{REMOTE_LOG_DIR}/{filename}"
+        ok, _ = ssh_cmd(host, f"rm {remote_path}", timeout=10)
+        if ok:
+            print(f"  Deleted {filename}")
+            deleted += 1
+        else:
+            print(f"  Failed to delete {filename}")
+
+    print(f"\nDeleted {deleted}/{len(logs)} file(s).")
+
+
 def update_latest_dir(downloaded_filenames):
     """Copy the most recent log set into logs/latest/ when new logs are downloaded.
 
@@ -449,12 +483,14 @@ def main():
     )
     parser.add_argument("--list", action="store_true", help="List logs on the roboRIO without downloading")
     parser.add_argument("--all", action="store_true", help="Re-download all logs (not just new ones)")
+    parser.add_argument("--latest", action="store_true", help="Download only the most recent log")
     parser.add_argument("--no-cleanup", action="store_true", help="Skip USB cleanup after downloading")
     parser.add_argument("--no-match", action="store_true", help="Skip DS log matching")
     parser.add_argument("--keep", type=int, default=DEFAULT_KEEP_RECENT,
                         help=f"Number of recent logs to always keep on USB (default {DEFAULT_KEEP_RECENT})")
     parser.add_argument("--min-free", type=int, default=DEFAULT_MIN_FREE_MB,
                         help=f"Minimum free space in MB before cleanup (default {DEFAULT_MIN_FREE_MB})")
+    parser.add_argument("--wipe", action="store_true", help="Delete ALL logs from the roboRIO USB")
     parser.add_argument("--host", type=str, default=None,
                         help="Override roboRIO hostname/IP")
     args = parser.parse_args()
@@ -465,12 +501,15 @@ def main():
         print(f"  Tried: {', '.join(ROBORIO_HOSTS)}")
         sys.exit(1)
 
-    if args.list:
+    if args.wipe:
+        do_wipe(host)
+    elif args.list:
         do_list(host)
     else:
         do_pull(
             host,
             force_all=args.all,
+            latest_only=args.latest,
             cleanup=not args.no_cleanup,
             keep_recent=args.keep,
             min_free_mb=args.min_free,

@@ -13,7 +13,7 @@ public class Indexer extends SubsystemBase {
     private final IndexerIOInputsAutoLogged inputs;
 
     private final LoggedTunableNumber indexerVoltage =
-            new LoggedTunableNumber("Hopper/Indexer/Voltage", 5.0);
+            new LoggedTunableNumber("Hopper/Indexer/Voltage", 4.0);
 
     public Indexer(IndexerIO io) {
         this.io = io;

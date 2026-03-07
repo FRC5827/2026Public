@@ -232,11 +232,14 @@ public class Targeting extends SubsystemBase {
     }
 
     public double getAirTimeToTarget() {
-        if (trajectoryCoefficients == null) {
+        if (trajectoryCoefficients == null || targetTranslation == null) {
             return 0;
         }
         // Time to reach target is time to reach horizontal distance at horizontal velocity
         double horizontalVelocity = shooterVelocity * Math.cos(pitchAngle);
+        if (horizontalVelocity <= 0) {
+            return 0;
+        }
         double horizontalDistance = targetTranslation.toTranslation2d().getNorm();
         return horizontalDistance / horizontalVelocity;
     }

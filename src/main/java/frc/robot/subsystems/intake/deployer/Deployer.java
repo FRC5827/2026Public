@@ -45,11 +45,11 @@ public class Deployer extends SubsystemBase {
     static final LoggedTunableNumber DEPLOYER_RETRACT_ANGLE_RAD =
             new LoggedTunableNumber(
                     "Intake/DeployerRetractPosition",
-                    Units.rotationsToRadians(-0.409180)); // subject to change
+                    Units.rotationsToRadians(0.043701)); // subject to change
     static final LoggedTunableNumber DEPLOYER_DEPLOY_ANGLE_RAD =
             new LoggedTunableNumber(
                     "Intake/DeployerDeployPosition",
-                    Units.rotationsToRadians(-0.040283)); // subject to change
+                    Units.rotationsToRadians(0.384766)); // subject to change
     private final LoggedTunableNumber deployerVoltage =
             new LoggedTunableNumber("Intake/DeployerVoltage", 1.0);
 
@@ -59,7 +59,7 @@ public class Deployer extends SubsystemBase {
     static final Angle DEPLOYER_MIN_ANGLE =
             Radians.of(DEPLOYER_RETRACT_ANGLE_RAD.get()); // subject to change
 
-    static final double DEPLOYER_GEAR_RATIO = 5;
+    static final double DEPLOYER_GEAR_RATIO = 10;
 
     private final DeployerIO io;
     private final DeployerIOInputsAutoLogged inputs;

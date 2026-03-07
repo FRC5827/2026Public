@@ -110,9 +110,10 @@ public class RobotContainer {
                 new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVision(cameraFRName, robotToCameraFR),
-                        new VisionIOPhotonVision(cameraFLName, robotToCameraFL),
-                        new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
-                        new VisionIOPhotonVision(cameraBLName, robotToCameraBL));
+                        new VisionIOPhotonVision(cameraFLName, robotToCameraFL)
+                        // new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
+                        // new VisionIOPhotonVision(cameraBLName, robotToCameraBL)
+                        );
 
                 intakeDeployer = new Deployer(new DeployerIOTalonFX());
 
@@ -144,19 +145,19 @@ public class RobotContainer {
                             new VisionIOPhotonVisionSim(
                                     cameraFRName, robotToCameraFR, drive::getPose),
                             new VisionIOPhotonVisionSim(
-                                    cameraFLName, robotToCameraFL, drive::getPose),
-                            new VisionIOPhotonVisionSim(
-                                    cameraBRName, robotToCameraBR, drive::getPose),
-                            new VisionIOPhotonVisionSim(
-                                    cameraBLName, robotToCameraBL, drive::getPose));
+                                    cameraFLName, robotToCameraFL, drive::getPose)
+                            // new VisionIOPhotonVisionSim(
+                            //         cameraBRName, robotToCameraBR, drive::getPose),
+                            // new VisionIOPhotonVisionSim(
+                            //         cameraBLName, robotToCameraBL, drive::getPose)
+                            );
                 } else {
                     // Initialize vision (local scope only, not stored)
                     new Vision(
-                            drive::addVisionMeasurement,
-                            new VisionIO() {},
-                            new VisionIO() {},
-                            new VisionIO() {},
-                            new VisionIO() {});
+                            drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {}
+                            // new VisionIO() {},
+                            // new VisionIO() {}
+                            );
                 }
 
                 intakeDeployer = new Deployer(new DeployerIOSim());
@@ -182,11 +183,10 @@ public class RobotContainer {
 
                 // Initialize vision (local scope only, not stored)
                 new Vision(
-                        drive::addVisionMeasurement,
-                        new VisionIO() {},
-                        new VisionIO() {},
-                        new VisionIO() {},
-                        new VisionIO() {});
+                        drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {}
+                        // new VisionIO() {},
+                        // new VisionIO() {}
+                        );
 
                 intakeDeployer = new Deployer(new DeployerIO() {});
                 intakeFlywheel = new Flywheel(new FlywheelIO() {});
