@@ -34,7 +34,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     public FlywheelIOTalonFX() {
         this.flywheelMotor =
-                new TalonFX(Constants.intakeFlywheelMotorCanbus_ID, Constants.intakeCANBus);
+                new TalonFX(Constants.intakeFlywheelMotorCanbus_ID, Constants.canivore);
         config = new TalonFXConfiguration();
 
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;

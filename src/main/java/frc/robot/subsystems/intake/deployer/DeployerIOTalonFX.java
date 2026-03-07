@@ -40,7 +40,7 @@ public class DeployerIOTalonFX implements DeployerIO {
     private final PositionVoltage positionRequest = new PositionVoltage(0.0);
 
     public DeployerIOTalonFX() {
-        deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID, Constants.intakeCANBus);
+        deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID, Constants.canivore);
         deployerConfig = new TalonFXConfiguration();
         deployerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         deployerConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;

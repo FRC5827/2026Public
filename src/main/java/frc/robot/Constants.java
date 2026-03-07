@@ -48,7 +48,7 @@ public final class Constants {
     public static final int hopperIndexerMotorOpenCanbus_ID = 20;
     public static final int hopperKickerMotorOpenCanbus_ID = 19;
 
-    public static final CANBus intakeCANBus = new CANBus("canivore");
+    public static final CANBus canivore = new CANBus("canivore");
     public static final int intakeDeployerMotorCanbus_ID = 22;
     public static final int intakeDeployerCancoder_ID = 23;
     public static final int intakeFlywheelMotorCanbus_ID = 21;
