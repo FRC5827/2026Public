@@ -226,7 +226,8 @@ public class RobotContainer {
                         .alongWith(Commands.waitUntil(shooter::isShooterAtVelocity))
                         .andThen(
                                 Commands.parallel(
-                                        hopperIndexer.runIndexer(), hopperKicker.runKicker())));
+                                        hopperIndexer.runIndexer(), hopperKicker.runKicker()))
+                        .andThen(shooter.shootAtTarget()));
 
         // Intake command: run intake flywheel
         NamedCommands.registerCommand("Intake", intakeFlywheel.runIntake().withTimeout(2.0));
@@ -278,6 +279,10 @@ public class RobotContainer {
 
         // intake controls
         controller.leftTrigger().whileTrue(intakeFlywheel.runIntake());
+        controller
+                .leftBumper()
+                .onTrue(intakeDeployer.retractDeployer())
+                .onFalse(intakeDeployer.deployDeployer());
 
         controller.povUp().whileTrue(intakeFlywheel.runReverse());
 
@@ -295,9 +300,6 @@ public class RobotContainer {
                 .povDown()
                 .onTrue(intakeDeployer.retractDeployer())
                 .onFalse(intakeDeployer.deployDeployer());
-
-        controller.rightBumper().whileTrue(intakeDeployer.deployerUp());
-        controller.leftBumper().whileTrue(intakeDeployer.deployerDown());
 
         // temporary testing command for tuning shooter
         controller
@@ -327,6 +329,7 @@ public class RobotContainer {
     public void checkTrenchAlignment() {
         Pose2d robotPose = drive.getPose();
         boolean isCurrentlyAligned = isTrenchAligned(robotPose);
+        boolean lowerHood = lowerHoodForTrench(robotPose);
 
         // Only rumble when newly aligned (transition from not aligned to aligned)
         if (isCurrentlyAligned && !wasPreviouslyAligned) {
@@ -334,6 +337,10 @@ public class RobotContainer {
         } else if (!isCurrentlyAligned && wasPreviouslyAligned) {
             // Stop rumble when no longer aligned
             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
+        }
+
+        if (lowerHood) {
+            targeting.lowerForTrench();
         }
 
         wasPreviouslyAligned = isCurrentlyAligned;
@@ -377,6 +384,49 @@ public class RobotContainer {
 
         boolean isTrenchAligned =
                 (isAlignedWithLeftTrench || isAlignedWithRightTrench) && !isNearDriverStations;
+
+        return isTrenchAligned;
+    }
+
+    private boolean lowerHoodForTrench(Pose2d robotPose) {
+        double robotY = robotPose.getY();
+        double robotX = robotPose.getX();
+        // Robot bumper to bumper length (Y dimension) - 0.826m is width, kept for reference
+        double halfLength = Constants.ROBOT_LENGTH / 2.0;
+
+        // Calculate the bounds of the entire robot
+        double robotYMin = robotY - halfLength;
+        double robotYMax = robotY + halfLength;
+
+        // Check if entire robot fits within left trench opening
+        boolean isAlignedWithLeftTrench =
+                robotYMin >= FieldConstants.LinesHorizontal.leftTrenchOpenEnd
+                        && robotYMax <= FieldConstants.LinesHorizontal.leftTrenchOpenStart;
+
+        // Check if entire robot fits within right trench opening
+        boolean isAlignedWithRightTrench =
+                robotYMin >= FieldConstants.LinesHorizontal.rightTrenchOpenEnd
+                        && robotYMax <= FieldConstants.LinesHorizontal.rightTrenchOpenStart;
+
+        // Exclude corners near driver stations - don't rumble near the ends of the field
+        // Field length is approximately 16.54 meters, so corners are at X near 0 and X near 16.54
+        double trenchZoneDistance = 0.2; // meters from each end
+        boolean isNearTrench =
+                ((Math.abs(FieldConstants.LeftTrench.openingTopLeft.getX() - robotX)
+                                        < trenchZoneDistance
+                                || Math.abs(
+                                                FieldConstants.RightTrench.openingTopLeft.getX()
+                                                        - robotX)
+                                        < trenchZoneDistance))
+                        || ((Math.abs(FieldConstants.LeftTrench.oppOpeningTopLeft.getX() - robotX)
+                                        < trenchZoneDistance
+                                || Math.abs(
+                                                FieldConstants.RightTrench.oppOpeningTopRight.getX()
+                                                        - robotX)
+                                        < trenchZoneDistance));
+
+        boolean isTrenchAligned =
+                (isAlignedWithLeftTrench || isAlignedWithRightTrench) && isNearTrench;
 
         return isTrenchAligned;
     }

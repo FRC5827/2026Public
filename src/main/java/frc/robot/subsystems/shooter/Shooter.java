@@ -23,7 +23,7 @@ public class Shooter extends SubsystemBase {
     private static final LoggedTunableNumber shooterOpenLoopVoltage =
             new LoggedTunableNumber("Shooter/Shooter/Open Loop Voltage", 0.5);
     private static final LoggedTunableNumber shooterTolerance =
-            new LoggedTunableNumber("Shooter/Shooter/ToleranceMPS", 0.1);
+            new LoggedTunableNumber("Shooter/Shooter/ToleranceMPS", 1.25);
     static final LoggedTunableNumber shooterKP = new LoggedTunableNumber("Shooter/Shooter/kP", 0.5);
     static final LoggedTunableNumber shooterKD = new LoggedTunableNumber("Shooter/Shooter/kD", 0.0);
     static final LoggedTunableNumber shooterKS = new LoggedTunableNumber("Shooter/Shooter/kS", 0.0);

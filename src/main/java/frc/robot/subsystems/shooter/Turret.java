@@ -32,7 +32,7 @@ public class Turret extends SubsystemBase {
     private static final LoggedTunableNumber yawTolerance =
             new LoggedTunableNumber("Shooter/Yaw/Tolerance", 0.01);
     static final LoggedTunableNumber yawZeroingOffset =
-            new LoggedTunableNumber("Shooter/Yaw/Zeroing Offset", -0.285);
+            new LoggedTunableNumber("Shooter/Yaw/Zeroing Offset", -0.295);
     static final LoggedTunableNumber yawMinRotations =
             new LoggedTunableNumber("Shooter/Yaw/Min Rotations", -0.74);
     static final LoggedTunableNumber yawMaxRotations =

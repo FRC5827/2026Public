@@ -81,7 +81,7 @@ public class TurretIOReal implements TurretIO {
         inputs.yawMotorCurrent = yawMotorCurrent.getValueAsDouble();
         inputs.yawMotorTemperature = yawMotorTemperature.getValueAsDouble();
         inputs.yawTurretPositionRotations = yawMotorPosition.getValueAsDouble();
-        inputs.yawLimitSwitchPressed = !yawLimitSwitch.get();
+        inputs.yawLimitSwitchPressed = yawLimitSwitch.get();
         inputs.pitchServoRequestedPosition = pitchServoPosition;
     }
 

@@ -23,7 +23,8 @@ public class Deployer extends SubsystemBase {
 
     // PID constants - subject to change
     // for motion profiling
-    static final LoggedTunableNumber DEPLOYER_kP = new LoggedTunableNumber("Intake/Deployer kP", 1);
+    static final LoggedTunableNumber DEPLOYER_kP =
+            new LoggedTunableNumber("Intake/Deployer kP", 30);
     static final LoggedTunableNumber DEPLOYER_kD = new LoggedTunableNumber("Intake/Deployer kD", 0);
 
     // feedforward constants
@@ -37,27 +38,27 @@ public class Deployer extends SubsystemBase {
             new LoggedTunableNumber("Intake/Deployer kG", 0.0);
 
     static final LoggedTunableNumber DEPLOYER_MAX_VELOCITY =
-            new LoggedTunableNumber("Intake/Max Velocity", 1.0);
+            new LoggedTunableNumber("Intake/Max Velocity", 3.0);
     static final LoggedTunableNumber DEPLOYER_MAX_ACCELERATION =
-            new LoggedTunableNumber("Intake/Max Acceleration", 2.5);
+            new LoggedTunableNumber("Intake/Max Acceleration", 3.0);
 
     // target points, 0 is always horizontal by convention
     static final LoggedTunableNumber DEPLOYER_RETRACT_ANGLE_RAD =
             new LoggedTunableNumber(
                     "Intake/DeployerRetractPosition",
-                    Units.rotationsToRadians(0.043701)); // subject to change
+                    Units.rotationsToRadians(0.385254)); // subject to change
     static final LoggedTunableNumber DEPLOYER_DEPLOY_ANGLE_RAD =
             new LoggedTunableNumber(
                     "Intake/DeployerDeployPosition",
-                    Units.rotationsToRadians(0.384766)); // subject to change
+                    Units.rotationsToRadians(0.030518)); // subject to change
     private final LoggedTunableNumber deployerVoltage =
-            new LoggedTunableNumber("Intake/DeployerVoltage", 1.0);
+            new LoggedTunableNumber("Intake/DeployerVoltage", 2.0);
 
     // deployer max/min angles
     static final Angle DEPLOYER_MAX_ANGLE =
-            Radians.of(DEPLOYER_DEPLOY_ANGLE_RAD.get()); // subject to change
-    static final Angle DEPLOYER_MIN_ANGLE =
             Radians.of(DEPLOYER_RETRACT_ANGLE_RAD.get()); // subject to change
+    static final Angle DEPLOYER_MIN_ANGLE =
+            Radians.of(DEPLOYER_DEPLOY_ANGLE_RAD.get()); // subject to change
 
     static final double DEPLOYER_GEAR_RATIO = 10;
 
@@ -81,8 +82,8 @@ public class Deployer extends SubsystemBase {
                         new TrapezoidProfile.Constraints(
                                 DEPLOYER_MAX_VELOCITY.get(), DEPLOYER_MAX_ACCELERATION.get()));
 
-        profileCurrentState = new TrapezoidProfile.State(DEPLOYER_DEPLOY_ANGLE_RAD.get(), 0.0);
-        profileGoalState = new TrapezoidProfile.State(DEPLOYER_DEPLOY_ANGLE_RAD.get(), 0.0);
+        profileCurrentState = new TrapezoidProfile.State(DEPLOYER_RETRACT_ANGLE_RAD.get(), 0.0);
+        profileGoalState = new TrapezoidProfile.State(DEPLOYER_RETRACT_ANGLE_RAD.get(), 0.0);
     }
 
     @Override

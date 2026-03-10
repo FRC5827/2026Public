@@ -10,6 +10,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.util.Units;
@@ -43,6 +44,7 @@ public class DeployerIOTalonFX implements DeployerIO {
         deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID, Constants.canivore);
         deployerConfig = new TalonFXConfiguration();
         deployerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        deployerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         deployerConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
         deployerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         deployerConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
@@ -53,9 +55,9 @@ public class DeployerIOTalonFX implements DeployerIO {
         deployerConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         deployerConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         deployerConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-                Deployer.DEPLOYER_MIN_ANGLE.in(Rotations);
-        deployerConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
                 Deployer.DEPLOYER_MAX_ANGLE.in(Rotations);
+        deployerConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+                Deployer.DEPLOYER_MIN_ANGLE.in(Rotations);
 
         deployerConfig.Slot0.kP = Deployer.DEPLOYER_kP.get();
         deployerConfig.Slot0.kD = Deployer.DEPLOYER_kD.get();

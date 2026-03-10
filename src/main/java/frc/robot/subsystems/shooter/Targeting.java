@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -68,6 +69,7 @@ public class Targeting extends SubsystemBase {
     // --- Pose tracking for yaw velocity estimate ---
     private Pose2d lastPose;
     private double lastPoseTimestamp;
+    private final LinearFilter xFilter, yFilter, rFilter;
 
     // --- Computed state (updated each periodic()) ---
     private double pitchAngle = 0.0;
@@ -81,6 +83,9 @@ public class Targeting extends SubsystemBase {
         this.robotPoseSupplier = robotPoseSupplier;
         this.lastPose = robotPoseSupplier.get();
         this.lastPoseTimestamp = Timer.getFPGATimestamp();
+        this.xFilter = LinearFilter.movingAverage(10);
+        this.yFilter = LinearFilter.movingAverage(10);
+        this.rFilter = LinearFilter.movingAverage(10);
 
         overrideTimeRestrictions =
                 new LoggedDashboardChooser<>("Override Time Restrictions", new SendableChooser<>());
@@ -188,9 +193,16 @@ public class Targeting extends SubsystemBase {
     @Override
     public void periodic() {
         Pose2d robotPose = robotPoseSupplier.get();
+        double dt = (Timer.getFPGATimestamp() - lastPoseTimestamp);
+        Transform2d poseVelocity = robotPose.minus(lastPose).div(dt);
+        double filteredX = xFilter.calculate(poseVelocity.getX());
+        double filteredY = yFilter.calculate(poseVelocity.getY());
+        double filteredR = rFilter.calculate(poseVelocity.getRotation().getRotations());
+        Transform2d filteredTransform =
+                new Transform2d(filteredX, filteredY, Rotation2d.fromRotations(filteredR));
 
         if (hasTarget()) {
-            update(robotPose);
+            update(robotPose, filteredTransform);
         } else {
             lowerForTrench();
         }
@@ -246,7 +258,7 @@ public class Targeting extends SubsystemBase {
 
     // --- Internal computation ---
 
-    private void update(Pose2d robotPose) {
+    private void update(Pose2d robotPose, Transform2d filteredVelocity) {
 
         Translation3d shooterTranslation =
                 new Pose3d(robotPose).transformBy(SHOOTER_TRANSLATION_ON_ROBOT).getTranslation();
@@ -255,15 +267,6 @@ public class Targeting extends SubsystemBase {
 
         double[] pitchAndVelocity =
                 calculatePitchAndVelocityWithTranslations(shooterToTargetTranslation);
-
-        // get the movement of the shooter due to robot movement
-        Translation3d shooterMovement =
-                shooterTranslation
-                        .minus(
-                                new Pose3d(lastPose)
-                                        .transformBy(SHOOTER_TRANSLATION_ON_ROBOT)
-                                        .getTranslation())
-                        .div(Timer.getFPGATimestamp() - lastPoseTimestamp);
 
         // if we get a valid pitch and velocity, compensate for robot velocity and recalculate
         // using a simple linear approximation
@@ -274,14 +277,15 @@ public class Targeting extends SubsystemBase {
                             / (pitchAndVelocity[1] * Math.cos(pitchAndVelocity[0]));
 
             // combined with robot velocity get the new "effective shooter pose"
-            Translation3d effectiveShooterTranslation =
-                    shooterTranslation.plus(shooterMovement.times(timeToScore));
-            Translation3d effectiveShooterToTargetTranslation =
-                    targetTranslation.minus(effectiveShooterTranslation);
+            shooterTranslation =
+                    new Pose3d(robotPose.transformBy(filteredVelocity.times(timeToScore)))
+                            .transformBy(SHOOTER_TRANSLATION_ON_ROBOT)
+                            .getTranslation();
+            shooterToTargetTranslation = targetTranslation.minus(shooterTranslation);
 
             // recalculate pitch and velocity with new shooter pose
             pitchAndVelocity =
-                    calculatePitchAndVelocityWithTranslations(effectiveShooterToTargetTranslation);
+                    calculatePitchAndVelocityWithTranslations(shooterToTargetTranslation);
         }
 
         double computedPitch = pitchAndVelocity[0];
@@ -300,10 +304,7 @@ public class Targeting extends SubsystemBase {
         // range
         if (computedYawPosition >= Turret.yawMinRotations.get()
                 && computedYawPosition <= Turret.yawMaxRotations.get()) {
-            // calculate robot velocity
-            Transform2d robotVelocity =
-                    robotPose.minus(lastPose).div(Timer.getFPGATimestamp() - lastPoseTimestamp);
-            computedYawVelocity = -robotVelocity.getRotation().getRotations();
+            computedYawVelocity = -filteredVelocity.getRotation().getRotations();
         }
 
         pitchAngle = computedPitch;
