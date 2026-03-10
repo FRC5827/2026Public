@@ -21,26 +21,26 @@ public class Turret extends SubsystemBase {
 
     // These values in radians
     static final LoggedTunableNumber pitchMinAngleRad =
-            new LoggedTunableNumber("Shooter/Pitch/Min Angle Radians", Units.degreesToRadians(20));
+            new LoggedTunableNumber("Turret/Pitch/Min Angle Radians", Units.degreesToRadians(20));
     static final LoggedTunableNumber pitchMaxAngleRad =
-            new LoggedTunableNumber("Shooter/Pitch/Max Angle Radians", Units.degreesToRadians(85));
+            new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", Units.degreesToRadians(85));
 
     private static final LoggedTunableNumber yawZeroingVoltage =
-            new LoggedTunableNumber("Shooter/Yaw/Zeroing Voltage", 0.67);
+            new LoggedTunableNumber("Turret/Yaw/Zeroing Voltage", 0.67);
     private static final LoggedTunableNumber yawOpenLoopVoltage =
-            new LoggedTunableNumber("Shooter/Yaw/Open Loop Voltage", 1.0);
+            new LoggedTunableNumber("Turret/Yaw/Open Loop Voltage", 1.0);
     private static final LoggedTunableNumber yawTolerance =
-            new LoggedTunableNumber("Shooter/Yaw/Tolerance", 0.01);
+            new LoggedTunableNumber("Turret/Yaw/Tolerance", 0.01);
     static final LoggedTunableNumber yawZeroingOffset =
-            new LoggedTunableNumber("Shooter/Yaw/Zeroing Offset", -0.295);
+            new LoggedTunableNumber("Turret/Yaw/Zeroing Offset", -0.295);
     static final LoggedTunableNumber yawMinRotations =
-            new LoggedTunableNumber("Shooter/Yaw/Min Rotations", -0.74);
+            new LoggedTunableNumber("Turret/Yaw/Min Rotations", -0.74);
     static final LoggedTunableNumber yawMaxRotations =
-            new LoggedTunableNumber("Shooter/Yaw/Max Rotations", 0.0);
-    static final LoggedTunableNumber yawKP = new LoggedTunableNumber("Shooter/Yaw/kP", 120.0);
-    static final LoggedTunableNumber yawKD = new LoggedTunableNumber("Shooter/Yaw/kD", 0.0);
-    static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Shooter/Yaw/kS", 0.08);
-    static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Shooter/Yaw/kV", 5.64);
+            new LoggedTunableNumber("Turret/Yaw/Max Rotations", 0.0);
+    static final LoggedTunableNumber yawKP = new LoggedTunableNumber("Turret/Yaw/kP", 120.0);
+    static final LoggedTunableNumber yawKD = new LoggedTunableNumber("Turret/Yaw/kD", 0.0);
+    static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Turret/Yaw/kS", 0.08);
+    static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Turret/Yaw/kV", 5.64);
 
     private boolean yawZeroed = false;
 

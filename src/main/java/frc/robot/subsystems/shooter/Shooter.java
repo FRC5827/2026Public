@@ -21,14 +21,13 @@ public class Shooter extends SubsystemBase {
     private final Targeting targeting;
 
     private static final LoggedTunableNumber shooterOpenLoopVoltage =
-            new LoggedTunableNumber("Shooter/Shooter/Open Loop Voltage", 0.5);
+            new LoggedTunableNumber("Shooter/Open Loop Voltage", 0.5);
     private static final LoggedTunableNumber shooterTolerance =
-            new LoggedTunableNumber("Shooter/Shooter/ToleranceMPS", 1.25);
-    static final LoggedTunableNumber shooterKP = new LoggedTunableNumber("Shooter/Shooter/kP", 0.5);
-    static final LoggedTunableNumber shooterKD = new LoggedTunableNumber("Shooter/Shooter/kD", 0.0);
-    static final LoggedTunableNumber shooterKS = new LoggedTunableNumber("Shooter/Shooter/kS", 0.0);
-    static final LoggedTunableNumber shooterKV =
-            new LoggedTunableNumber("Shooter/Shooter/kV", 0.76);
+            new LoggedTunableNumber("Shooter/ToleranceMPS", 1.25);
+    static final LoggedTunableNumber shooterKP = new LoggedTunableNumber("Shooter/kP", 0.5);
+    static final LoggedTunableNumber shooterKD = new LoggedTunableNumber("Shooter/kD", 0.0);
+    static final LoggedTunableNumber shooterKS = new LoggedTunableNumber("Shooter/kS", 0.0);
+    static final LoggedTunableNumber shooterKV = new LoggedTunableNumber("Shooter/kV", 0.76);
 
     private SimpleMotorFeedforward shooterFeedforward =
             new SimpleMotorFeedforward(shooterKS.get(), shooterKV.get());
