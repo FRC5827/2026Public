@@ -1,8 +1,12 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -26,6 +30,10 @@ public final class Superstructure extends SubsystemBase {
     private final Kicker kicker;
     private final Indexer indexer;
     private final Targeting targeting;
+    private final Drive drive;
+
+    private final Field2d field2d = new Field2d();
+    ;
 
     private static final LoggedTunableNumber hubEdgeDY =
             new LoggedTunableNumber("Shooter/Hub Edge dy", 0.3);
@@ -44,6 +52,8 @@ public final class Superstructure extends SubsystemBase {
         this.kicker = kicker;
         this.indexer = indexer;
         this.targeting = targeting;
+        this.drive = drive;
+        SmartDashboard.putData("Field2d", field2d);
     }
 
     @Override
@@ -51,21 +61,32 @@ public final class Superstructure extends SubsystemBase {
         double startTime = Timer.getFPGATimestamp();
         Logger.recordOutput(
                 "PerformanceMonitor/Superstructure", (Timer.getFPGATimestamp() - startTime) * 1000);
+
+        // Update Field2d
+        field2d.setRobotPose(drive.getPose());
+        if (targeting.hasTarget()) {
+            field2d.getObject("Shooter Target")
+                    .setPose(
+                            new Pose2d(
+                                    targeting.getTargetTranslation().toTranslation2d(),
+                                    Rotation2d.kZero));
+        } else {
+            field2d.getObject("Shooter Target").setPose(new Pose2d(5, 5, Rotation2d.kZero));
+        }
     }
 
-    public Command aimAtHub() {
+    public Command aimAtTarget() {
         return targeting
                 .runOnce(
                         () -> {
+                            targeting.setTarget(
+                                    AllianceFlipUtil.shouldFlip()
+                                            ? FieldConstants.Hub.oppInnerCenterPoint
+                                            : FieldConstants.Hub.innerCenterPoint,
+                                    new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
                             double airTime = targeting.getAirTimeToTarget();
-                            if (GameTimeUtil.isHubActive(airTime + DriverStation.getMatchTime())
+                            if (!GameTimeUtil.isHubActive(airTime + DriverStation.getMatchTime())
                                     && !Targeting.overrideTimeRestrictions.get()) {
-                                targeting.setTarget(
-                                        AllianceFlipUtil.shouldFlip()
-                                                ? FieldConstants.Hub.oppInnerCenterPoint
-                                                : FieldConstants.Hub.innerCenterPoint,
-                                        new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
-                            } else {
                                 targeting.clearTarget();
                             }
                         })
@@ -87,7 +108,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Command aimAndShoot() {
-        return Commands.parallel(aimAtHub(), shootAtTarget(), runKickerAndIndexer());
+        return Commands.parallel(aimAtTarget(), shootAtTarget(), runKickerAndIndexer());
     }
 
     public boolean isShootingAtTarget() {

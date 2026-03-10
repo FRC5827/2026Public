@@ -223,6 +223,10 @@ public class Targeting extends SubsystemBase {
 
     // --- Getters ---
 
+    public Translation3d getTargetTranslation() {
+        return targetTranslation;
+    }
+
     public double getPitchAngle() {
         return pitchAngle;
     }

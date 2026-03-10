@@ -287,7 +287,7 @@ public class RobotContainer {
         controller.povUp().whileTrue(intakeFlywheel.runReverse());
 
         // shoot controls
-        turret.setDefaultCommand(superstructure.aimAtHub());
+        turret.setDefaultCommand(superstructure.aimAtTarget());
         controller.rightTrigger().whileTrue(superstructure.aimAndShoot());
 
         // Hopper and Kicker controls
@@ -319,7 +319,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.get();
+        return Commands.sequence(intakeDeployer.deployDeployer(), autoChooser.get());
     }
 
     /**

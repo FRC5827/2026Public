@@ -41,8 +41,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -66,6 +64,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Drive extends SubsystemBase {
     // TunerConstants doesn't include these constants, so they are declared locally
     static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
+
     public static final double DRIVE_BASE_RADIUS =
             Math.max(
                     Math.max(
@@ -105,7 +104,6 @@ public class Drive extends SubsystemBase {
 
     static final Lock odometryLock = new ReentrantLock();
     private final GyroIO gyroIO;
-    private final Field2d field2d = new Field2d();
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
     private final SysIdRoutine sysId;
@@ -138,7 +136,6 @@ public class Drive extends SubsystemBase {
         modules[2] = new Module(blModuleIO, 2, TunerConstants.BackLeft);
         modules[3] = new Module(brModuleIO, 3, TunerConstants.BackRight);
 
-        SmartDashboard.putData("Drive/Field2d", field2d);
         // Usage reporting for swerve template
         HAL.report(
                 tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -182,8 +179,6 @@ public class Drive extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // Update Field2d
-        field2d.setRobotPose(getPose());
 
         // Time CAN refresh + input processing (under lock)
         long canRefreshStart = RobotController.getFPGATime();
