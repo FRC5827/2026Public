@@ -38,14 +38,14 @@ public class Deployer extends SubsystemBase {
             new LoggedTunableNumber("Intake/Deployer/kG", 0.0);
 
     static final LoggedTunableNumber DEPLOYER_MAX_VELOCITY =
-            new LoggedTunableNumber("Intake/Depoloyer/Max Velocity", 3.0);
+            new LoggedTunableNumber("Intake/Deployer/Max Velocity", 3.0);
     static final LoggedTunableNumber DEPLOYER_MAX_ACCELERATION =
             new LoggedTunableNumber("Intake/Deployer/Max Acceleration", 3.0);
 
     // target points, 0 is always horizontal by convention
     static final LoggedTunableNumber DEPLOYER_RETRACT_ANGLE_RAD =
             new LoggedTunableNumber(
-                    "Intake/DeployerRetractPosition",
+                    "Intake/Deployer/RetractPosition",
                     Units.rotationsToRadians(0.385254)); // subject to change
     static final LoggedTunableNumber DEPLOYER_DEPLOY_ANGLE_RAD =
             new LoggedTunableNumber(
