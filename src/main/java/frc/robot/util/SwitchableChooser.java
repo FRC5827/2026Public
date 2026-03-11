@@ -66,6 +66,16 @@ public class SwitchableChooser extends LoggedNetworkInput {
         return active;
     }
 
+    /** Returns the current options array. */
+    public String[] getOptions() {
+        return options.clone();
+    }
+
+    /** Returns the raw selected string from NetworkTables (before matching to options). */
+    public String getSelectedRaw() {
+        return selectedInput.get();
+    }
+
     public void periodic() {
         String selected = selectedInput.get();
         active = null;

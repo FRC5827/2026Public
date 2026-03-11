@@ -140,13 +140,13 @@ public class AutoChooser extends SubsystemBase {
 
             List<String> autoNames = AutoBuilder.getAllAutoNames();
             for (String autoName : autoNames) {
-                if (autoName.contains("Left Bump")) {
+                if (autoName.startsWith("Left Bump")) {
                     this.autoNames.get("Left Bump").add(autoName);
-                } else if (autoName.contains("Left Trench")) {
+                } else if (autoName.startsWith("Left Trench")) {
                     this.autoNames.get("Left Trench").add(autoName);
-                } else if (autoName.contains("Right Bump")) {
+                } else if (autoName.startsWith("Right Bump")) {
                     this.autoNames.get("Right Bump").add(autoName);
-                } else if (autoName.contains("Right Trench")) {
+                } else if (autoName.startsWith("Right Trench")) {
                     this.autoNames.get("Right Trench").add(autoName);
                 }
             }
@@ -278,12 +278,16 @@ public class AutoChooser extends SubsystemBase {
         // 2. It prevents loop overruns while the robot is enabled
         if (RobotState.isDisabled()) {
             String previousAutoName = autoName;
+            // Log robot state
+            Logger.recordOutput("AutoChooser/CharacterizationMode", Constants.characterizationMode);
 
             // Build the current auto name safely using strings only
             int delay = delayChooser.get() != null ? delayChooser.get() : 0;
+            Logger.recordOutput("AutoChooser/Delay", delay);
             if (Constants.characterizationMode) {
                 String selected = sysIdChooser.get();
                 autoName = delay + "+" + (selected != null ? selected : "None");
+
             } else {
                 String selectedAuto1 = autoChooser1.get();
                 String selectedAuto2 = autoChooser2.get();
@@ -309,10 +313,19 @@ public class AutoChooser extends SubsystemBase {
 
             // If the auto name has changed since the last loop, update the auto routine and send a
             // notification
-            if (!previousAutoName.equals(autoName)) {
-
+            boolean autoNameChanged = !previousAutoName.equals(autoName);
+            Logger.recordOutput("AutoChooser/PreviousAutoName", previousAutoName);
+            Logger.recordOutput("AutoChooser/NewAutoName", autoName);
+            Logger.recordOutput("AutoChooser/AutoNameChanged", autoNameChanged);
+            if (autoNameChanged) {
                 if (Constants.characterizationMode) {
                     String selectedSysId = sysIdChooser.get();
+                    Logger.recordOutput(
+                            "AutoChooser/SysIdSelected",
+                            selectedSysId != null ? selectedSysId : "null");
+                    Logger.recordOutput(
+                            "AutoChooser/SysIdRoutineKeys",
+                            sysIdRoutines.keySet().toArray(new String[0]));
                     if (selectedSysId == null || "None".equals(selectedSysId)) {
                         Elastic.sendNotification(
                                 new Notification()
@@ -344,6 +357,45 @@ public class AutoChooser extends SubsystemBase {
                                         .withLevel(NotificationLevel.INFO));
                     }
                 } else {
+                    String loc1 = locationChooser1 != null ? locationChooser1.get() : "null";
+                    String loc2 = locationChooser2 != null ? locationChooser2.get() : "null";
+                    String loc3 = locationChooser3 != null ? locationChooser3.get() : "null";
+                    Logger.recordOutput(
+                            "AutoChooser/LocationChooser1", loc1 != null ? loc1 : "null");
+                    Logger.recordOutput(
+                            "AutoChooser/LocationChooser2", loc2 != null ? loc2 : "null");
+                    Logger.recordOutput(
+                            "AutoChooser/LocationChooser3", loc3 != null ? loc3 : "null");
+                    // Log SwitchableChooser 1 internals
+                    if (autoChooser1 != null) {
+                        String raw1 = autoChooser1.getSelectedRaw();
+                        Logger.recordOutput(
+                                "AutoChooser/AutoChooser1/SelectedRaw",
+                                raw1 != null ? raw1 : "null");
+                        Logger.recordOutput("AutoChooser/AutoChooser1/Active", autoChooser1.get());
+                        Logger.recordOutput(
+                                "AutoChooser/AutoChooser1/Options", autoChooser1.getOptions());
+                    }
+                    // Log SwitchableChooser 2 internals
+                    if (autoChooser2 != null) {
+                        String raw2 = autoChooser2.getSelectedRaw();
+                        Logger.recordOutput(
+                                "AutoChooser/AutoChooser2/SelectedRaw",
+                                raw2 != null ? raw2 : "null");
+                        Logger.recordOutput("AutoChooser/AutoChooser2/Active", autoChooser2.get());
+                        Logger.recordOutput(
+                                "AutoChooser/AutoChooser2/Options", autoChooser2.getOptions());
+                    }
+                    // Log SwitchableChooser 3 internals
+                    if (autoChooser3 != null) {
+                        String raw3 = autoChooser3.getSelectedRaw();
+                        Logger.recordOutput(
+                                "AutoChooser/AutoChooser3/SelectedRaw",
+                                raw3 != null ? raw3 : "null");
+                        Logger.recordOutput("AutoChooser/AutoChooser3/Active", autoChooser3.get());
+                        Logger.recordOutput(
+                                "AutoChooser/AutoChooser3/Options", autoChooser3.getOptions());
+                    }
                     if (autoName.contains("No auto!")) {
                         // Because they are no more leave points or stupid Auto RPs, it doesn't make
                         // sense to create a
