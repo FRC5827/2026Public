@@ -59,6 +59,7 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.util.FieldUtil;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -283,11 +284,13 @@ public class RobotContainer {
                 .leftBumper()
                 .onTrue(intakeDeployer.retractDeployer())
                 .onFalse(intakeDeployer.deployDeployer());
+        controller.leftBumper().onTrue(intakeDeployer.retractDeployer());
+        controller.rightBumper().onTrue(intakeDeployer.deployDeployer());
 
         controller.povUp().whileTrue(intakeFlywheel.runReverse());
 
         // shoot controls
-        turret.setDefaultCommand(superstructure.aimAtTarget());
+        turret.setDefaultCommand(superstructure.aim());
         controller.rightTrigger().whileTrue(superstructure.aimAndShoot());
 
         // Hopper and Kicker controls
@@ -327,9 +330,7 @@ public class RobotContainer {
      * periodically (e.g., in Robot.java) to detect alignment changes.
      */
     public void checkTrenchAlignment() {
-        Pose2d robotPose = drive.getPose();
-        boolean isCurrentlyAligned = isTrenchAligned(robotPose);
-        boolean lowerHood = lowerHoodForTrench(robotPose);
+        boolean isCurrentlyAligned = FieldUtil.isTrenchAligned(drive::getPose);
 
         // Only rumble when newly aligned (transition from not aligned to aligned)
         if (isCurrentlyAligned && !wasPreviouslyAligned) {
@@ -339,95 +340,10 @@ public class RobotContainer {
             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
         }
 
-        if (lowerHood) {
+        if (isCurrentlyAligned) {
             targeting.lowerForTrench();
         }
 
         wasPreviouslyAligned = isCurrentlyAligned;
-    }
-
-    /**
-     * Determines if the robot is aligned with the trench opening. This checks if the entire robot
-     * is within the left or right trench opening bounds, not just the center point. Also excludes
-     * corner areas (near the driver stations) from triggering rumble.
-     *
-     * @param robotPose the robot's current pose
-     * @return true if the entire robot is aligned with a trench opening and not near driver
-     *     stations
-     */
-    private boolean isTrenchAligned(Pose2d robotPose) {
-        double robotY = robotPose.getY();
-        double robotX = robotPose.getX();
-        // Robot bumper to bumper length (Y dimension) - 0.826m is width, kept for reference
-        double halfLength = Constants.ROBOT_LENGTH / 2.0;
-
-        // Calculate the bounds of the entire robot
-        double robotYMin = robotY - halfLength;
-        double robotYMax = robotY + halfLength;
-
-        // Check if entire robot fits within left trench opening
-        boolean isAlignedWithLeftTrench =
-                robotYMin >= FieldConstants.LinesHorizontal.leftTrenchOpenEnd
-                        && robotYMax <= FieldConstants.LinesHorizontal.leftTrenchOpenStart;
-
-        // Check if entire robot fits within right trench opening
-        boolean isAlignedWithRightTrench =
-                robotYMin >= FieldConstants.LinesHorizontal.rightTrenchOpenEnd
-                        && robotYMax <= FieldConstants.LinesHorizontal.rightTrenchOpenStart;
-
-        // Exclude corners near driver stations - don't rumble near the ends of the field
-        // Field length is approximately 16.54 meters, so corners are at X near 0 and X near 16.54
-        double cornerExclusionDistance = 1.2; // meters from each end
-        boolean isNearDriverStations =
-                robotX < cornerExclusionDistance
-                        || robotX > (FieldConstants.fieldLength - cornerExclusionDistance);
-
-        boolean isTrenchAligned =
-                (isAlignedWithLeftTrench || isAlignedWithRightTrench) && !isNearDriverStations;
-
-        return isTrenchAligned;
-    }
-
-    private boolean lowerHoodForTrench(Pose2d robotPose) {
-        double robotY = robotPose.getY();
-        double robotX = robotPose.getX();
-        // Robot bumper to bumper length (Y dimension) - 0.826m is width, kept for reference
-        double halfLength = Constants.ROBOT_LENGTH / 2.0;
-
-        // Calculate the bounds of the entire robot
-        double robotYMin = robotY - halfLength;
-        double robotYMax = robotY + halfLength;
-
-        // Check if entire robot fits within left trench opening
-        boolean isAlignedWithLeftTrench =
-                robotYMin >= FieldConstants.LinesHorizontal.leftTrenchOpenEnd
-                        && robotYMax <= FieldConstants.LinesHorizontal.leftTrenchOpenStart;
-
-        // Check if entire robot fits within right trench opening
-        boolean isAlignedWithRightTrench =
-                robotYMin >= FieldConstants.LinesHorizontal.rightTrenchOpenEnd
-                        && robotYMax <= FieldConstants.LinesHorizontal.rightTrenchOpenStart;
-
-        // Exclude corners near driver stations - don't rumble near the ends of the field
-        // Field length is approximately 16.54 meters, so corners are at X near 0 and X near 16.54
-        double trenchZoneDistance = 0.2; // meters from each end
-        boolean isNearTrench =
-                ((Math.abs(FieldConstants.LeftTrench.openingTopLeft.getX() - robotX)
-                                        < trenchZoneDistance
-                                || Math.abs(
-                                                FieldConstants.RightTrench.openingTopLeft.getX()
-                                                        - robotX)
-                                        < trenchZoneDistance))
-                        || ((Math.abs(FieldConstants.LeftTrench.oppOpeningTopLeft.getX() - robotX)
-                                        < trenchZoneDistance
-                                || Math.abs(
-                                                FieldConstants.RightTrench.oppOpeningTopRight.getX()
-                                                        - robotX)
-                                        < trenchZoneDistance));
-
-        boolean isTrenchAligned =
-                (isAlignedWithLeftTrench || isAlignedWithRightTrench) && isNearTrench;
-
-        return isTrenchAligned;
     }
 }

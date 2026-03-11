@@ -19,6 +19,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.Targeting;
 import frc.robot.subsystems.shooter.Turret;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldUtil;
 import frc.robot.util.GameTimeUtil;
 import frc.robot.util.LoggedTunableNumber;
 
@@ -33,7 +34,6 @@ public final class Superstructure extends SubsystemBase {
     private final Drive drive;
 
     private final Field2d field2d = new Field2d();
-    ;
 
     private static final LoggedTunableNumber hubEdgeDY =
             new LoggedTunableNumber("Shooter/Hub Edge dy", 0.3);
@@ -60,6 +60,10 @@ public final class Superstructure extends SubsystemBase {
     public void periodic() {
         double startTime = Timer.getFPGATimestamp();
         Logger.recordOutput(
+                "Superstructure/Is Aiming At Hub",
+                FieldUtil.isInCurrentAllianceZone(drive::getPose, DriverStation.getAlliance())
+                        && targeting.canAimAtTarget());
+        Logger.recordOutput(
                 "PerformanceMonitor/Superstructure", (Timer.getFPGATimestamp() - startTime) * 1000);
 
         // Update Field2d
@@ -75,7 +79,16 @@ public final class Superstructure extends SubsystemBase {
         }
     }
 
-    public Command aimAtTarget() {
+    public Command aim() {
+        return (Commands.either(
+                aimAtHub(),
+                aimAtCorner(),
+                () ->
+                        FieldUtil.isInCurrentAllianceZone(
+                                drive::getPose, DriverStation.getAlliance())));
+    }
+
+    public Command aimAtHub() {
         return targeting
                 .runOnce(
                         () -> {
@@ -95,7 +108,10 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Command aimAtCorner() {
-        return targeting.runOnce(() -> targeting.aimAtCorner());
+        return targeting
+                .runOnce(() -> targeting.aimAtCorner())
+                .andThen(turret.aimAtTarget())
+                .finallyDo(() -> targeting.clearTarget());
     }
 
     public Command shootAtTarget() {
@@ -108,7 +124,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Command aimAndShoot() {
-        return Commands.parallel(aimAtTarget(), shootAtTarget(), runKickerAndIndexer());
+        return Commands.parallel(aim(), shootAtTarget(), runKickerAndIndexer());
     }
 
     public boolean isShootingAtTarget() {

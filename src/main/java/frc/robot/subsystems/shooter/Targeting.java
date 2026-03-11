@@ -200,7 +200,6 @@ public class Targeting extends SubsystemBase {
         double filteredR = rFilter.calculate(poseVelocity.getRotation().getRotations());
         Transform2d filteredTransform =
                 new Transform2d(filteredX, filteredY, Rotation2d.fromRotations(filteredR));
-
         if (hasTarget()) {
             update(robotPose, filteredTransform);
         } else {
