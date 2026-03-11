@@ -90,8 +90,8 @@ public class TurretIOSim implements TurretIO {
     }
 
     @Override
-    public void zeroYaw() {
-        yawMotorSim.setState(Turret.yawZeroingOffset.get(), 0);
+    public void zeroYaw(double zeroingOffset) {
+        yawMotorSim.setState(zeroingOffset, 0);
         yawLimitSwitchPressed = false;
     }
 }
