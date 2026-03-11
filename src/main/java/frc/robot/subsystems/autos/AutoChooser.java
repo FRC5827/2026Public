@@ -28,10 +28,14 @@ import java.util.List;
 import java.util.Map;
 
 public class AutoChooser extends SubsystemBase {
-    private LoggedDashboardChooser<String> locationChooser;
+    private LoggedDashboardChooser<String> locationChooser1;
+    private LoggedDashboardChooser<String> locationChooser2;
+    private LoggedDashboardChooser<String> locationChooser3;
     private LoggedDashboardChooser<Integer> delayChooser;
     private LoggedDashboardChooser<String> sysIdChooser;
-    private SwitchableChooser compAutoChooser;
+    private SwitchableChooser autoChooser1;
+    private SwitchableChooser autoChooser2;
+    private SwitchableChooser autoChooser3;
     private Drive drive;
     private Command auto;
     private Map<String, List<String>> autoNames;
@@ -101,18 +105,34 @@ public class AutoChooser extends SubsystemBase {
                             .withLevel(NotificationLevel.WARNING)
                             .withNoAutoDismiss());
         } else {
-            locationChooser =
+            locationChooser1 =
                     new LoggedDashboardChooser<>(
                             "Starting Location", new SendableChooser<String>());
 
-            compAutoChooser = new SwitchableChooser("Comp Auto Chooser");
-
-            locationChooser.addDefaultOption("Left Bump", "Left Bump");
-            locationChooser.addOption("Left Trench", "Left Trench");
-            locationChooser.addOption("Right Bump", "Right Bump");
-            locationChooser.addOption("Right Trench", "Right Trench");
-
-            // Initialize location maps
+            autoChooser1 = new SwitchableChooser("Auto Chooser 1");
+            autoChooser2 = new SwitchableChooser("Auto Chooser 2");
+            autoChooser3 = new SwitchableChooser("Auto Chooser 3");
+            locationChooser1.addDefaultOption("Left Trench", "Left Trench");
+            locationChooser1.addOption("Left Bump", "Left Bump");
+            locationChooser1.addOption("Right Bump", "Right Bump");
+            locationChooser1.addOption("Right Trench", "Right Trench");
+            locationChooser2 =
+                    new LoggedDashboardChooser<>(
+                            "Starting Location 2", new SendableChooser<String>());
+            locationChooser2.addDefaultOption("No 2nd auto!", "No 2nd auto!");
+            locationChooser2.addOption("Left Bump", "Left Bump");
+            locationChooser2.addOption("Left Trench", "Left Trench");
+            locationChooser2.addOption("Right Bump", "Right Bump");
+            locationChooser2.addOption("Right Trench", "Right Trench");
+            locationChooser3 =
+                    new LoggedDashboardChooser<>(
+                            "Starting Location 3", new SendableChooser<String>());
+            locationChooser3.addDefaultOption("No 3rd auto!", "No 3rd auto!");
+            locationChooser3.addOption("Left Bump", "Left Bump");
+            locationChooser3.addOption("Left Trench", "Left Trench");
+            locationChooser3.addOption("Right Bump", "Right Bump");
+            locationChooser3.addOption("Right Trench", "Right Trench");
+            // Initialize location maps for all location choosers
             this.autoNames.put("Left Bump", new ArrayList<>());
             this.autoNames.put("Left Trench", new ArrayList<>());
             this.autoNames.put("Right Bump", new ArrayList<>());
@@ -141,15 +161,61 @@ public class AutoChooser extends SubsystemBase {
             // compAutoChooser with those options. It also sends a notification to Elastic to inform
             // the user that the location has been changed and they should select a new auto routine
             // based on the new location.
-            locationChooser
+            locationChooser1
                     .getSendableChooser()
                     .onChange(
                             (s) -> {
                                 // s is the location string from the callback
-                                String locStr = s != null ? s : "Left Bump";
+                                String locStr = s != null ? s : "Left Trench";
                                 List<String> options = AutoChooser.this.autoNames.get(locStr);
                                 if (options != null && !options.isEmpty()) {
-                                    compAutoChooser.setOptions(options.toArray(new String[0]));
+                                    autoChooser1.setOptions(options.toArray(new String[0]));
+                                    Elastic.sendNotification(
+                                            new Elastic.Notification(
+                                                    Elastic.NotificationLevel.INFO,
+                                                    "Location Changed",
+                                                    "Your selected location has changed."));
+                                }
+                            });
+            locationChooser2
+                    .getSendableChooser()
+                    .onChange(
+                            (s) -> {
+                                // s is the location string from the callback
+                                String locStr = s != null ? s : "Left Trench";
+                                List<String> options = AutoChooser.this.autoNames.get(locStr);
+                                if ("No 2nd auto!".equals(s)) {
+                                    autoChooser2.setOptions(new String[] {"No 2nd auto!"});
+                                    Elastic.sendNotification(
+                                            new Elastic.Notification(
+                                                    Elastic.NotificationLevel.INFO,
+                                                    "No 2nd Auto Selected",
+                                                    "You have selected to run only one auto routine. If you want to run two auto routines, make sure you select a starting location for the second auto."));
+                                } else if (options != null && !options.isEmpty()) {
+                                    autoChooser2.setOptions(options.toArray(new String[0]));
+                                    Elastic.sendNotification(
+                                            new Elastic.Notification(
+                                                    Elastic.NotificationLevel.INFO,
+                                                    "Location Changed",
+                                                    "Your selected location has changed."));
+                                }
+                            });
+            locationChooser3
+                    .getSendableChooser()
+                    .onChange(
+                            (s) -> {
+                                // s is the location string from the callback
+                                String locStr = s != null ? s : "Left Trench";
+                                List<String> options = AutoChooser.this.autoNames.get(locStr);
+                                if ("No 3rd auto!".equals(s)) {
+                                    autoChooser3.setOptions(new String[] {"No 3rd auto!"});
+                                    Elastic.sendNotification(
+                                            new Elastic.Notification(
+                                                    Elastic.NotificationLevel.INFO,
+                                                    "No 3rd Auto Selected",
+                                                    "You have selected to run only one or two auto routines. If you want to run three auto routines, make sure you select a starting location for the third auto."));
+                                } else if (options != null && !options.isEmpty()) {
+                                    autoChooser3.setOptions(options.toArray(new String[0]));
                                     Elastic.sendNotification(
                                             new Elastic.Notification(
                                                     Elastic.NotificationLevel.INFO,
@@ -159,21 +225,44 @@ public class AutoChooser extends SubsystemBase {
                             });
 
             // Set initial options
-            String initialLoc = locationChooser.get();
+            String initialLoc = locationChooser1.get();
             if (initialLoc == null) {
-                initialLoc = "Left Bump";
+                initialLoc = "Left Trench";
             }
             List<String> initialOptions = AutoChooser.this.autoNames.get(initialLoc);
             if (initialOptions != null && !initialOptions.isEmpty()) {
-                compAutoChooser.setOptions(initialOptions.toArray(new String[0]));
+                autoChooser1.setOptions(initialOptions.toArray(new String[0]));
+            }
+            // Initialize second auto chooser based on its location selection
+            String initialLoc2 = locationChooser2.get();
+            if (initialLoc2 == null) {
+                initialLoc2 = "Left Trench";
+            }
+            List<String> initialOptions2 = AutoChooser.this.autoNames.get(initialLoc2);
+            if ("No 2nd auto!".equals(initialLoc2)) {
+                autoChooser2.setOptions(new String[] {"No 2nd auto!"});
+            } else if (initialOptions2 != null && !initialOptions2.isEmpty()) {
+                autoChooser2.setOptions(initialOptions2.toArray(new String[0]));
+            }
+            // Initialize third auto chooser based on its location selection
+            String initialLoc3 = locationChooser3.get();
+            if (initialLoc3 == null) {
+                initialLoc3 = "Left Trench";
+            }
+            List<String> initialOptions3 = AutoChooser.this.autoNames.get(initialLoc3);
+            if ("No 3rd auto!".equals(initialLoc3)) {
+                autoChooser3.setOptions(new String[] {"No 3rd auto!"});
+            } else if (initialOptions3 != null && !initialOptions3.isEmpty()) {
+                autoChooser3.setOptions(initialOptions3.toArray(new String[0]));
             }
             Elastic.sendNotification(
                     new Notification()
-                            .withTitle("Auto Chooser Initialized in Competition Mode")
+                            .withTitle(
+                                    "IMPORTANT: Change each individual location for each auto, even if it's correct!")
                             .withDescription(
-                                    "The auto chooser has been initialized with the available competition autos. Please select a starting location and auto routine.")
-                            .withLevel(NotificationLevel.INFO)
-                            .withDisplaySeconds(30));
+                                    "Unexpected behavior may result otherwise. Select different location, and then change it back, even if same location on EACH auto!")
+                            .withLevel(NotificationLevel.WARNING)
+                            .withNoAutoDismiss());
         }
     }
 
@@ -196,20 +285,35 @@ public class AutoChooser extends SubsystemBase {
                 String selected = sysIdChooser.get();
                 autoName = delay + "+" + (selected != null ? selected : "None");
             } else {
-                String selected = compAutoChooser.get();
-                if (selected == null || selected.equals("No auto!")) {
+                String selectedAuto1 = autoChooser1.get();
+                String selectedAuto2 = autoChooser2.get();
+                String selectedAuto3 = autoChooser3.get();
+                if (selectedAuto1 == null || selectedAuto1.equals("No auto!")) {
                     autoName = "No auto!";
+                } else if (selectedAuto2 == null || selectedAuto2.equals("No 2nd auto!")) {
+                    autoName = delay + "+" + selectedAuto1 + "+" + "No 2nd auto!";
+                } else if (selectedAuto3 == null || selectedAuto3.equals("No 3rd auto!")) {
+                    autoName =
+                            delay
+                                    + "+"
+                                    + selectedAuto1
+                                    + "+"
+                                    + selectedAuto2
+                                    + "+"
+                                    + "No 3rd auto!";
                 } else {
-                    autoName = delay + "+" + selected;
+                    autoName =
+                            delay + "+" + selectedAuto1 + "+" + selectedAuto2 + "+" + selectedAuto3;
                 }
             }
+
             // If the auto name has changed since the last loop, update the auto routine and send a
             // notification
             if (!previousAutoName.equals(autoName)) {
 
                 if (Constants.characterizationMode) {
                     String selectedSysId = sysIdChooser.get();
-                    if (selectedSysId == null || selectedSysId.equals("None")) {
+                    if (selectedSysId == null || "None".equals(selectedSysId)) {
                         Elastic.sendNotification(
                                 new Notification()
                                         .withTitle("No SysId routine selected")
@@ -240,7 +344,7 @@ public class AutoChooser extends SubsystemBase {
                                         .withLevel(NotificationLevel.INFO));
                     }
                 } else {
-                    if (autoName.equals("No auto!")) {
+                    if (autoName.contains("No auto!")) {
                         // Because they are no more leave points or stupid Auto RPs, it doesn't make
                         // sense to create a
                         // default auto that just drives forward and stops after a few seconds, so
@@ -256,13 +360,65 @@ public class AutoChooser extends SubsystemBase {
                                         .withLevel(NotificationLevel.WARNING)
                                         .withNoAutoDismiss());
                         auto = Commands.none();
+                    } else if (autoName.contains("No 2nd auto!")) {
+                        Elastic.sendNotification(
+                                new Notification()
+                                        .withTitle("Only one auto selected")
+                                        .withDescription(
+                                                "Only one auto selected. If you want to run two autos, make sure you set a second auto")
+                                        .withLevel(NotificationLevel.INFO));
+                        String selectedAuto1 = autoChooser1.get();
+                        auto =
+                                Commands.waitSeconds(delay)
+                                        .andThen(new PathPlannerAuto(selectedAuto1));
+
+                    } else if (autoName.contains("No 3rd auto!")) {
+                        Elastic.sendNotification(
+                                new Notification()
+                                        .withTitle("Multiple autos selected")
+                                        .withDescription(
+                                                "Multiple autos selected. Make sure that's your intent! If not, change the location for the second and third auto choosers to something, then change back to \"No 2nd auto!\" or \"No 3rd auto!\".")
+                                        .withLevel(NotificationLevel.WARNING)
+                                        .withDisplaySeconds(15));
+                        Elastic.sendNotification(
+                                new Notification()
+                                        .withTitle("Only two autos selected")
+                                        .withDescription(
+                                                "Only two autos selected. If you want to run three autos, make sure you set a third auto")
+                                        .withLevel(NotificationLevel.INFO)
+                                        .withDisplaySeconds(10));
+
+                        String selectedAuto1 = autoChooser1.get();
+                        String selectedAuto2 = autoChooser2.get();
+                        auto =
+                                Commands.waitSeconds(delay)
+                                        .andThen(new PathPlannerAuto(selectedAuto1))
+                                        .andThen(new PathPlannerAuto(selectedAuto2));
                     } else {
-                        String selectedPath = compAutoChooser.get();
+                        String selectedAuto1 = autoChooser1.get();
+                        String selectedAuto2 = autoChooser2.get();
+                        String selectedAuto3 = autoChooser3.get();
+                        autoName =
+                                delay
+                                        + "+"
+                                        + selectedAuto1
+                                        + "+"
+                                        + selectedAuto2
+                                        + "+"
+                                        + selectedAuto3;
+                        Elastic.sendNotification(
+                                new Notification()
+                                        .withTitle("Multiple autos selected")
+                                        .withDescription(
+                                                "Multiple autos selected. Make sure that's your intent! If not, change the location for the second and third auto choosers to something, then change back to \"No 2nd auto!\" or \"No 3rd auto!\".")
+                                        .withLevel(NotificationLevel.WARNING)
+                                        .withDisplaySeconds(15));
                         Elastic.sendNotification(
                                 new Notification()
                                         .withTitle("Auto changed")
                                         .withDescription("Auto changed to " + autoName)
                                         .withLevel(NotificationLevel.INFO));
+
                         try {
                             // The auto command fundamentally consists of two components:
                             // 1. A command that waits for the specified delay time before starting
@@ -270,17 +426,24 @@ public class AutoChooser extends SubsystemBase {
                             // 2. The actual auto routine command, which is a PathPlannerAuto object
                             // constructed with the selected auto, based on the string, so make sure
                             // they're the same
-                            auto =
-                                    Commands.waitSeconds(delay)
-                                            .andThen(new PathPlannerAuto(selectedPath));
-                            Elastic.sendNotification(
-                                    new Notification()
-                                            .withTitle("Auto loaded")
-                                            .withDescription(
-                                                    "Auto '"
-                                                            + selectedPath
-                                                            + "' loaded successfully.")
-                                            .withLevel(NotificationLevel.INFO));
+                            if (selectedAuto2 == null || selectedAuto2.equals("No 2nd auto!")) {
+                                auto =
+                                        Commands.waitSeconds(delay)
+                                                .andThen(new PathPlannerAuto(selectedAuto1));
+                            } else if (selectedAuto3 == null
+                                    || selectedAuto3.equals("No 3rd auto!")) {
+                                auto =
+                                        Commands.waitSeconds(delay)
+                                                .andThen(new PathPlannerAuto(selectedAuto1))
+                                                .andThen(new PathPlannerAuto(selectedAuto2));
+                            } else {
+                                auto =
+                                        Commands.waitSeconds(delay)
+                                                .andThen(new PathPlannerAuto(selectedAuto1))
+                                                .andThen(new PathPlannerAuto(selectedAuto2))
+                                                .andThen(new PathPlannerAuto(selectedAuto3));
+                            }
+                            ;
                         } catch (Exception e) {
                             // This should never happen, but if it does, we want to catch the
                             // exception and send a notification instead of crashing the robot code,
@@ -290,10 +453,7 @@ public class AutoChooser extends SubsystemBase {
                                     new Notification()
                                             .withTitle("Error loading auto")
                                             .withDescription(
-                                                    "Error loading auto '"
-                                                            + selectedPath
-                                                            + "': "
-                                                            + e.getMessage())
+                                                    "Error loading auto: " + e.getMessage())
                                             .withLevel(NotificationLevel.ERROR)
                                             .withNoAutoDismiss());
                             e.printStackTrace();
@@ -302,8 +462,9 @@ public class AutoChooser extends SubsystemBase {
                     }
                 }
             }
+            Logger.recordOutput(
+                    "PerformanceMonitor/AutoChooser",
+                    (Timer.getFPGATimestamp() - startTime) * 1000);
         }
-        Logger.recordOutput(
-                "PerformanceMonitor/AutoChooser", (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 }
