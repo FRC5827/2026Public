@@ -511,6 +511,7 @@ public class AutoChooser extends SubsystemBase {
                             e.printStackTrace();
                             auto = Commands.none();
                         }
+                        auto = auto.withName(autoName);
                     }
                 }
             }

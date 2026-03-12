@@ -220,21 +220,40 @@ public class RobotContainer {
         // used in autos in PathPlanner. These should use only direct subsystem commands, not
         // Superstructure (which is reserved for button bindings and manual control).
 
-        // Shoot command: aim at hub, wait for shooter to reach velocity, then shoot with hopper
+        // Shoot command: aim at hub, wait for shooter to reach velocity, then shoot with hopper.
+        // Wrapped in asProxy() so the auto sequence doesn't hold Turret/Targeting requirements
+        // for the entire auto — this allows the turret's default aiming command to run between
+        // path segments.
+        // I don't like proxying, but unfortunately it's the only way that works without massive
+        // refactoring
         NamedCommands.registerCommand(
                 "Shoot",
                 turret.aimAtTarget()
-                        .alongWith(Commands.waitUntil(shooter::isShooterAtVelocity))
+                        .withName("NC_Shoot_AimAtTarget")
+                        .alongWith(
+                                Commands.waitUntil(shooter::isShooterAtVelocity)
+                                        .withName("NC_Shoot_WaitForVelocity"))
+                        .withName("NC_Shoot_AimAndWait")
                         .andThen(
                                 Commands.parallel(
-                                        hopperIndexer.runIndexer(), hopperKicker.runKicker()))
-                        .andThen(shooter.shootAtTarget()));
+                                                hopperIndexer
+                                                        .runIndexer()
+                                                        .withName("NC_Shoot_RunIndexer"),
+                                                hopperKicker
+                                                        .runKicker()
+                                                        .withName("NC_Shoot_RunKicker"))
+                                        .withName("NC_Shoot_IndexAndKick"))
+                        .andThen(shooter.shootAtTarget().withName("NC_Shoot_ShootAtTarget"))
+                        .withName("NC_Shoot")
+                        .asProxy());
 
-        // Intake command: run intake flywheel
-        NamedCommands.registerCommand("Intake", intakeFlywheel.runIntake().withTimeout(2.0));
+        // Intake command: run intake flywheel (proxied so auto doesn't hold Flywheel requirement)
+        NamedCommands.registerCommand(
+                "Intake",
+                intakeFlywheel.runIntake().withTimeout(2.0).withName("NC_Intake").asProxy());
 
         // Climb command: placeholder for future implementation
-        NamedCommands.registerCommand("Climb", Commands.print("CLIMB!"));
+        NamedCommands.registerCommand("Climb", Commands.print("CLIMB!").withName("NC_Climb"));
     }
 
     /**
@@ -247,20 +266,22 @@ public class RobotContainer {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(
                 DriveCommands.joystickDrive(
-                        drive,
-                        () -> -controller.getLeftY(),
-                        () -> -controller.getLeftX(),
-                        () -> -controller.getRightX()));
+                                drive,
+                                () -> -controller.getLeftY(),
+                                () -> -controller.getLeftX(),
+                                () -> -controller.getRightX())
+                        .withName("Drive_JoystickDrive_Default"));
 
         // Lock to 0° when A button is held
         controller
                 .a()
                 .whileTrue(
                         DriveCommands.joystickDriveAtAngle(
-                                drive,
-                                () -> -controller.getLeftY(),
-                                () -> -controller.getLeftX(),
-                                () -> Rotation2d.kZero));
+                                        drive,
+                                        () -> -controller.getLeftY(),
+                                        () -> -controller.getLeftX(),
+                                        () -> Rotation2d.kZero)
+                                .withName("Drive_LockTo0Deg_A"));
 
         // Reset gyro to 0° when B button is pressed
         controller
@@ -273,33 +294,48 @@ public class RobotContainer {
                                                                 drive.getPose().getTranslation(),
                                                                 Rotation2d.kZero)),
                                         drive)
-                                .ignoringDisable(true));
+                                .ignoringDisable(true)
+                                .withName("Drive_ResetGyro_B"));
 
         // intake controls
-        controller.leftTrigger().whileTrue(intakeFlywheel.runIntake());
+        controller
+                .leftTrigger()
+                .whileTrue(intakeFlywheel.runIntake().withName("Intake_RunFlywheel_LT"));
         controller
                 .leftBumper()
-                .onTrue(intakeDeployer.retractDeployer())
-                .onFalse(intakeDeployer.deployDeployer());
-        controller.leftBumper().onTrue(intakeDeployer.retractDeployer());
-        controller.rightBumper().onTrue(intakeDeployer.deployDeployer());
+                .onTrue(intakeDeployer.retractDeployer().withName("Deployer_Retract_LB_OnTrue"))
+                .onFalse(intakeDeployer.deployDeployer().withName("Deployer_Deploy_LB_OnFalse"));
+        controller
+                .rightBumper()
+                .onTrue(intakeDeployer.deployDeployer().withName("Deployer_Deploy_RB"));
 
-        controller.povUp().whileTrue(intakeFlywheel.runReverse());
+        controller
+                .povUp()
+                .whileTrue(intakeFlywheel.runReverse().withName("Intake_RunReverse_PovUp"));
 
         // shoot controls
-        turret.setDefaultCommand(superstructure.aim());
-        controller.rightTrigger().whileTrue(superstructure.aimAndShoot());
+        turret.setDefaultCommand(superstructure.aim().withName("Turret_Aim_Default"));
+        controller
+                .rightTrigger()
+                .whileTrue(superstructure.aimAndShoot().withName("Superstructure_AimAndShoot_RT"));
 
         // Hopper and Kicker controls
         controller
                 .povRight()
-                .whileTrue(hopperIndexer.runIndexerReverse())
-                .whileTrue(hopperKicker.runKickerReverse());
+                .whileTrue(
+                        hopperIndexer.runIndexerReverse().withName("Indexer_RunReverse_PovRight"))
+                .whileTrue(hopperKicker.runKickerReverse().withName("Kicker_RunReverse_PovRight"));
 
         controller
                 .povDown()
-                .onTrue(intakeDeployer.retractDeployer())
-                .onFalse(intakeDeployer.deployDeployer());
+                .onTrue(
+                        intakeDeployer
+                                .retractDeployer()
+                                .withName("Deployer_Retract_PovDown_OnTrue"))
+                .onFalse(
+                        intakeDeployer
+                                .deployDeployer()
+                                .withName("Deployer_Deploy_PovDown_OnFalse"));
 
         // temporary testing command for tuning shooter
         controller
@@ -307,10 +343,18 @@ public class RobotContainer {
                 .whileTrue(
                         targeting
                                 .runOnce(() -> targeting.setTargetManual())
+                                .withName("Targeting_SetManual")
                                 .finallyDo(() -> targeting.clearTarget())
-                                .alongWith(turret.aimAtTarget())
-                                .alongWith(superstructure.shootAtTarget())
-                                .alongWith(superstructure.runKickerAndIndexer()));
+                                .alongWith(turret.aimAtTarget().withName("Turret_AimAtTarget_RS"))
+                                .alongWith(
+                                        superstructure
+                                                .shootAtTarget()
+                                                .withName("Superstructure_ShootAtTarget_RS"))
+                                .alongWith(
+                                        superstructure
+                                                .runKickerAndIndexer()
+                                                .withName("Superstructure_RunKickerAndIndexer_RS"))
+                                .withName("ManualShootTest_RightStick"));
     }
 
     /**
@@ -319,7 +363,10 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Commands.sequence(intakeDeployer.deployDeployer(), autoChooser.get());
+        return Commands.sequence(
+                        intakeDeployer.deployDeployer().withName("Auto_DeployIntake"),
+                        autoChooser.get())
+                .withName("Auto_FullSequence");
     }
 
     /**
