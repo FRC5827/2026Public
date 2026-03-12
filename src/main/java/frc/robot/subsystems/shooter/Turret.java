@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.util.LoggedTunableNumber;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Turret extends SubsystemBase {
@@ -42,6 +43,7 @@ public class Turret extends SubsystemBase {
     static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Turret/Yaw/kS", 0.08);
     static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Turret/Yaw/kV", 5.64);
 
+    @AutoLogOutput(key = "Turret/Yaw Zeroed")
     private boolean yawZeroed = false;
 
     private SimpleMotorFeedforward yawFeedforward =
@@ -57,6 +59,7 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         double startTime = Timer.getFPGATimestamp();
         io.updateInputs(inputs);
+        Logger.processInputs("Turret", inputs);
 
         checkForPIDUpdates();
 
@@ -76,8 +79,6 @@ public class Turret extends SubsystemBase {
             }
         }
 
-        Logger.processInputs("Turret", inputs);
-        Logger.recordOutput("Turret/Yaw Zeroed", yawZeroed);
         Logger.recordOutput(
                 "PerformanceMonitor/Turret", (Timer.getFPGATimestamp() - startTime) * 1000);
     }

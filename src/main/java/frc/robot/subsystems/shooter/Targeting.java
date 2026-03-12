@@ -20,7 +20,7 @@ import frc.robot.FieldConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedTunableNumber;
 
-import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.function.Supplier;
@@ -76,8 +76,8 @@ public class Targeting extends SubsystemBase {
     private double shooterVelocity = 0.0;
     private double yawPosition = 0.0;
     private double yawVelocity = 0.0;
-    private double[] trajectoryCoefficients = null; // can be null
     private boolean canAimAtTarget = false;
+    private double airTimeToTarget = 0.0;
 
     public Targeting(Supplier<Pose2d> robotPoseSupplier) {
         this.robotPoseSupplier = robotPoseSupplier;
@@ -115,7 +115,6 @@ public class Targeting extends SubsystemBase {
                 solveForVelocityWithAngle(pitchAngle, manualTargetDistanceMeters.get(), 0);
         this.yawPosition = 0.0;
         this.yawVelocity = 0.0;
-        this.trajectoryCoefficients = null;
         this.canAimAtTarget = true;
     }
 
@@ -123,7 +122,6 @@ public class Targeting extends SubsystemBase {
         this.pitchAngle = Turret.pitchMinAngleRad.get();
         this.shooterVelocity = 0.0;
         this.yawVelocity = 0.0;
-        this.trajectoryCoefficients = null;
         this.canAimAtTarget = false;
     }
 
@@ -133,6 +131,7 @@ public class Targeting extends SubsystemBase {
         this.targetClearance = null;
         this.canAimAtTarget = false;
         this.shooterVelocity = 0.0;
+        this.airTimeToTarget = 0.0;
     }
 
     public void aimAtCorner() {
@@ -180,6 +179,7 @@ public class Targeting extends SubsystemBase {
     }
 
     /** Returns {@code true} if a target is currently set. */
+    @AutoLogOutput(key = "Targeting/Has Target")
     public boolean hasTarget() {
         return targetTranslation != null && targetClearance != null;
     }
@@ -206,15 +206,6 @@ public class Targeting extends SubsystemBase {
             lowerForTrench();
         }
 
-        // Always log so AdvantageKit captures cleared state too
-        Logger.recordOutput("Aim/Has Target", hasTarget());
-        Logger.recordOutput("Aim/Can Aim At Target", canAimAtTarget);
-        Logger.recordOutput("Aim/Pitch Angle", pitchAngle);
-        Logger.recordOutput("Aim/Shooter Velocity", shooterVelocity);
-        Logger.recordOutput("Aim/Yaw Position", yawPosition);
-        Logger.recordOutput("Aim/Yaw Velocity", yawVelocity);
-        Logger.recordOutput("Aim/Trajectory Coefficients", trajectoryCoefficients);
-
         // Advance pose tracking
         lastPose = robotPose;
         lastPoseTimestamp = Timer.getFPGATimestamp();
@@ -226,37 +217,34 @@ public class Targeting extends SubsystemBase {
         return targetTranslation;
     }
 
+    @AutoLogOutput(key = "Targeting/Pitch Angle")
     public double getPitchAngle() {
         return pitchAngle;
     }
 
+    @AutoLogOutput(key = "Targeting/Shooter Velocity")
     public double getShooterVelocity() {
         return shooterVelocity;
     }
 
+    @AutoLogOutput(key = "Targeting/Yaw Position")
     public double getYawPosition() {
         return yawPosition;
     }
 
+    @AutoLogOutput(key = "Targeting/Yaw Velocity")
     public double getYawVelocity() {
         return yawVelocity;
     }
 
+    @AutoLogOutput(key = "Targeting/Can Aim At Target")
     public boolean canAimAtTarget() {
         return canAimAtTarget;
     }
 
+    @AutoLogOutput(key = "Targeting/Time To Target")
     public double getAirTimeToTarget() {
-        if (trajectoryCoefficients == null || targetTranslation == null) {
-            return 0;
-        }
-        // Time to reach target is time to reach horizontal distance at horizontal velocity
-        double horizontalVelocity = shooterVelocity * Math.cos(pitchAngle);
-        if (horizontalVelocity <= 0) {
-            return 0;
-        }
-        double horizontalDistance = targetTranslation.toTranslation2d().getNorm();
-        return horizontalDistance / horizontalVelocity;
+        return airTimeToTarget;
     }
 
     // --- Internal computation ---
@@ -294,6 +282,14 @@ public class Targeting extends SubsystemBase {
         double computedPitch = pitchAndVelocity[0];
         double computedVelocity = pitchAndVelocity[1] * shooterMultiplier.get();
 
+        if (computedVelocity != 0) {
+            airTimeToTarget =
+                    shooterToTargetTranslation.toTranslation2d().getNorm()
+                            / (computedVelocity * Math.cos(computedPitch));
+        } else {
+            airTimeToTarget = 0.0;
+        }
+
         double computedYawPosition =
                 calculateYawPosition(robotPose, shooterToTargetTranslation.toTranslation2d());
 
@@ -321,7 +317,7 @@ public class Targeting extends SubsystemBase {
         double dist = shooterToTargetTranslation.toTranslation2d().getNorm();
         double shooterToTargetVertical = shooterToTargetTranslation.getZ();
 
-        trajectoryCoefficients =
+        double[] trajectoryCoefficients =
                 solveQuadraticSystem(
                         0,
                         0,
