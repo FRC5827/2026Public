@@ -314,7 +314,9 @@ public class RobotContainer {
         turret.setDefaultCommand(superstructure.aim().withName("Turret_Aim_Default"));
         controller
                 .rightTrigger()
-                .whileTrue(superstructure.aimAndShoot().withName("Superstructure_AimAndShoot_RT"));
+                .whileTrue(superstructure.aimAndShoot().withName("Superstructure_AimAndShoot_RT"))
+                .onTrue(DriveCommands.setSlowMode(true).withName("Set_Slow_Mode"))
+                .onFalse(DriveCommands.setSlowMode(false).withName("Set_Slow_Mode"));
 
         // Hopper and Kicker controls
         controller

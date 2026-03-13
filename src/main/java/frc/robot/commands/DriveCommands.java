@@ -42,6 +42,9 @@ public class DriveCommands {
     private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
     private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+    private static final double SLOW_MODE_MULTIPLIER = 0.5;
+
+    private static boolean isSlowMode = false;
 
     private DriveCommands() {}
 
@@ -81,6 +84,11 @@ public class DriveCommands {
                     omega = Math.copySign(omega * omega, omega);
 
                     // Convert to field relative speeds & send command
+                    if (isSlowMode()) {
+                        linearVelocity = linearVelocity.times(SLOW_MODE_MULTIPLIER);
+                        omega *= SLOW_MODE_MULTIPLIER;
+                    }
+
                     ChassisSpeeds speeds =
                             new ChassisSpeeds(
                                     linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
@@ -118,6 +126,10 @@ public class DriveCommands {
                     omega = Math.copySign(omega * omega, omega);
 
                     // Convert to field relative speeds & send command
+                    if (isSlowMode()) {
+                        linearVelocity = linearVelocity.times(SLOW_MODE_MULTIPLIER);
+                        omega *= SLOW_MODE_MULTIPLIER;
+                    }
 
                     // intake as front for driver
                     ChassisSpeeds speeds =
@@ -166,6 +178,12 @@ public class DriveCommands {
                                             rotationSupplier.get().getRadians());
 
                             // Convert to field relative speeds & send command
+
+                            if (isSlowMode()) {
+                                linearVelocity = linearVelocity.times(SLOW_MODE_MULTIPLIER);
+                                omega *= SLOW_MODE_MULTIPLIER;
+                            }
+
                             ChassisSpeeds speeds =
                                     new ChassisSpeeds(
                                             linearVelocity.getX()
@@ -345,5 +363,13 @@ public class DriveCommands {
         double[] positions = new double[4];
         Rotation2d lastAngle = Rotation2d.kZero;
         double gyroDelta = 0.0;
+    }
+
+    public static boolean isSlowMode() {
+        return isSlowMode;
+    }
+
+    public static Command setSlowMode(boolean slowMode) {
+        return Commands.runOnce(() -> isSlowMode = slowMode);
     }
 }
