@@ -27,8 +27,7 @@ import java.nio.file.Path;
  */
 public class FieldConstants {
     // AprilTag related constants
-    // TODO: MAKE SURE TO CHANGE TO WELDED AFTER PRACTICE FIELD AS THAT'S WHAT WILL BE AT COMP
-    public static final FieldType fieldType = FieldType.ANDYMARK;
+    public static final FieldType fieldType = FieldType.WELDED;
     public static final int aprilTagCount =
             AprilTagLayoutType.OFFICIAL.getLayout().getTags().size();
     public static final double aprilTagWidth = Units.inchesToMeters(6.5);
