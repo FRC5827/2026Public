@@ -20,6 +20,7 @@ public final class Constants {
     public static final Mode simMode = Mode.SIM;
     public static final boolean tuningMode = true;
     public static final boolean characterizationMode = false;
+    public static final boolean fusionAutosEnabled = false;
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
     public static final boolean simWithVision = false;

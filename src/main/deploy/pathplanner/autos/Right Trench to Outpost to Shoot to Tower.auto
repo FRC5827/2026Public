@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Left Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Shoot to Neutral Pile"
+            "pathName": "Right Trench to Outpost"
           }
         },
         {
@@ -31,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Neutral Pile to Shoot"
+            "pathName": "Outpost to Shoot"
           }
         },
         {
@@ -39,11 +27,23 @@
           "data": {
             "name": "Shoot"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Shoot to Tower"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Climb"
+          }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Left Trench",
+  "folder": "Right Trench",
   "choreoAuto": false
 }

@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.647,
-        "y": 5.185
+        "x": 4.0,
+        "y": 7.523068181818182
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.243123106060606,
-        "y": 4.437556818181818
+        "x": 5.0,
+        "y": 7.523068181818182
       },
       "isLocked": false,
-      "linkedName": "LeftShoot"
+      "linkedName": "Left Trench"
     },
     {
       "anchor": {
-        "x": 0.7375444444444446,
-        "y": 0.6634222222222217
+        "x": 7.751,
+        "y": 7.143477777777778
       },
       "prevControl": {
-        "x": 3.129362626262626,
-        "y": 0.37274987373737417
+        "x": 8.016166666666667,
+        "y": 7.136916666666667
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "LeftNeutralPileLeft"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 82.0
   },
   "reversed": false,
-  "folder": "Stage 1",
+  "folder": "Stage 0",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

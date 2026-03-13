@@ -1,20 +1,22 @@
 {
   "robotWidth": 0.8255,
-  "robotLength": 0.8255,
+  "robotLength": 1.13,
   "holonomicMode": true,
   "pathFolders": [
+    "Neutral Zone Paths",
     "Random Paths",
     "Stage 0",
     "Stage 1",
     "Stage 2",
-    "Stage 3"
+    "Tower Paths"
   ],
   "autoFolders": [
     "Left Bump",
     "Left Trench",
-    "Test",
+    "Bad Autos",
     "Right Bump",
-    "Right Trench"
+    "Right Trench",
+    "Test"
   ],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,
@@ -38,7 +40,7 @@
   "blModuleY": 0.259,
   "brModuleX": -0.274,
   "brModuleY": -0.259,
-  "bumperOffsetX": 0.0,
+  "bumperOffsetX": -0.152,
   "bumperOffsetY": 0.0,
   "robotFeatures": []
 }

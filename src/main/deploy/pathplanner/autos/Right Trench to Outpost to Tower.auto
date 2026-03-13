@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trench to Right Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Shoot to Outpost"
+            "pathName": "Right Trench to Outpost"
           }
         },
         {

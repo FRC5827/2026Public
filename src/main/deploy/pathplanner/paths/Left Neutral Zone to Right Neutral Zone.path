@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.647,
-        "y": 5.185
+        "x": 7.751,
+        "y": 7.143477777777778
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.243123106060606,
-        "y": 4.437556818181818
+        "x": 7.792524621212122,
+        "y": 5.723335732323233
       },
       "isLocked": false,
-      "linkedName": "LeftShoot"
+      "linkedName": "LeftNeutralPileLeft"
     },
     {
       "anchor": {
-        "x": 0.7375444444444446,
-        "y": 0.6634222222222217
+        "x": 7.751,
+        "y": 1.0629444444444436
       },
       "prevControl": {
-        "x": 3.129362626262626,
-        "y": 0.37274987373737417
+        "x": 7.767609848484848,
+        "y": 2.01801073232323
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "RightNeutralPileLeft"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 82.0
   },
   "reversed": false,
-  "folder": "Stage 1",
+  "folder": "Neutral Zone Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": 82.0
   },
   "useDefaultConstraints": true
 }

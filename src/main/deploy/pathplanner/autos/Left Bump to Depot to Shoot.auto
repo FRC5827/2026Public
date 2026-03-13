@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trench to Outpost"
+            "pathName": "Left Bump, Depot"
           }
         },
         {
@@ -19,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost to Shoot"
+            "pathName": "Depot to Shoot"
           }
         },
         {
@@ -32,6 +32,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Right Trench",
+  "folder": "Left Bump",
   "choreoAuto": false
 }

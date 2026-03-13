@@ -3,48 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.12392045454024,
-        "y": 6.651051136368816
+        "x": 7.7,
+        "y": 7.123988888888889
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.725284090909091,
-        "y": 7.639337121212121
+        "x": 4.898422222222223,
+        "y": 7.426066666666667
       },
       "isLocked": false,
-      "linkedName": "LeftNeutralPile"
+      "linkedName": "LeftNeutralPileRight"
     },
     {
       "anchor": {
-        "x": 4.449734848484848,
-        "y": 7.514763257575758
+        "x": 2.647,
+        "y": 5.185
       },
       "prevControl": {
-        "x": 5.105154089496988,
-        "y": 7.521887379756666
-      },
-      "nextControl": {
-        "x": 2.921628787877725,
-        "y": 7.498153409100242
-      },
-      "isLocked": false,
-      "linkedName": "LeftTrenchPass"
-    },
-    {
-      "anchor": {
-        "x": 2.304,
-        "y": 4.749223484848485
-      },
-      "prevControl": {
-        "x": 2.079767045450393,
-        "y": 7.340359848480696
+        "x": 1.642670454545454,
+        "y": 8.04627840909091
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "LeftShoot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.3925311203319427,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -64,7 +53,7 @@
   "folder": "Stage 2",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 135.0
+    "rotation": -70.30494113113633
   },
   "useDefaultConstraints": true
 }

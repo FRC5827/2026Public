@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.304,
-        "y": 4.749223484848485
+        "x": 2.647,
+        "y": 5.185
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1379015151515155,
-        "y": 3.694498106060606
+        "x": 2.4809015151515155,
+        "y": 4.130274621212121
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
@@ -45,7 +45,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Stage 3",
+  "folder": "Tower Paths",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 45.0

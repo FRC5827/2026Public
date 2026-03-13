@@ -256,15 +256,6 @@ public class AutoChooser extends SubsystemBase {
             } else if (initialOptions3 != null && !initialOptions3.isEmpty()) {
                 autoChooser3.setOptions(initialOptions3.toArray(new String[0]));
             }
-            Elastic.sendNotification(
-                    new Notification()
-                            .withTitle(
-                                    "IMPORTANT: Change each individual location for each auto, even if it's correct!")
-                            .withDescription(
-                                    "Unexpected behavior may result otherwise. Select different location, and then change it back, even if same location on EACH auto!")
-                            .withLevel(NotificationLevel.WARNING)
-                            .withDisplaySeconds(
-                                    600)); // FIRST aims for 7-10 minute match cycles (Section 6.1)
         }
     }
 
@@ -419,89 +410,51 @@ public class AutoChooser extends SubsystemBase {
                         // (Section 6.1)
                         auto = Commands.none();
                     } else if (autoName.contains("No 2nd auto!")) {
-                        Elastic.sendNotification(
-                                new Notification()
-                                        .withTitle("Only one auto selected")
-                                        .withDescription(
-                                                "Only one auto selected. If you want to run two autos, make sure you set a second auto")
-                                        .withLevel(NotificationLevel.INFO));
                         String selectedAuto1 = autoChooser1.get();
                         auto =
                                 Commands.waitSeconds(delay)
                                         .andThen(new PathPlannerAuto(selectedAuto1));
 
                     } else if (autoName.contains("No 3rd auto!")) {
-                        Elastic.sendNotification(
-                                new Notification()
-                                        .withTitle("Multiple autos selected")
-                                        .withDescription(
-                                                "Multiple autos selected. Make sure that's your intent! If not, change the location for the second and third auto choosers to something, then change back to \"No 2nd auto!\" or \"No 3rd auto!\".")
-                                        .withLevel(NotificationLevel.WARNING)
-                                        .withDisplaySeconds(15));
-                        Elastic.sendNotification(
-                                new Notification()
-                                        .withTitle("Only two autos selected")
-                                        .withDescription(
-                                                "Only two autos selected. If you want to run three autos, make sure you set a third auto")
-                                        .withLevel(NotificationLevel.INFO)
-                                        .withDisplaySeconds(10));
+                        ;
 
                         String selectedAuto1 = autoChooser1.get();
                         String selectedAuto2 = autoChooser2.get();
                         auto =
                                 Commands.waitSeconds(delay)
-                                        .andThen(new PathPlannerAuto(selectedAuto1))
-                                        .andThen(new PathPlannerAuto(selectedAuto2));
+                                        .andThen(new PathPlannerAuto(selectedAuto1));
                     } else {
                         String selectedAuto1 = autoChooser1.get();
-                        String selectedAuto2 = autoChooser2.get();
-                        String selectedAuto3 = autoChooser3.get();
-                        autoName =
-                                delay
-                                        + "+"
-                                        + selectedAuto1
-                                        + "+"
-                                        + selectedAuto2
-                                        + "+"
-                                        + selectedAuto3;
-                        Elastic.sendNotification(
-                                new Notification()
-                                        .withTitle("Multiple autos selected")
-                                        .withDescription(
-                                                "Multiple autos selected. Make sure that's your intent! If not, change the location for the second and third auto choosers to something, then change back to \"No 2nd auto!\" or \"No 3rd auto!\".")
-                                        .withLevel(NotificationLevel.WARNING)
-                                        .withDisplaySeconds(15));
+                        // When fusion autos are disabled only the first auto runs, so truncate the
+                        // notification to reflect what actually executes.
+                        String notificationName =
+                                Constants.fusionAutosEnabled
+                                        ? autoName
+                                        : delay + "+" + selectedAuto1;
                         Elastic.sendNotification(
                                 new Notification()
                                         .withTitle("Auto changed")
-                                        .withDescription("Auto changed to " + autoName)
+                                        .withDescription("Auto changed to " + notificationName)
                                         .withLevel(NotificationLevel.INFO));
 
                         try {
-                            // The auto command fundamentally consists of two components:
-                            // 1. A command that waits for the specified delay time before starting
-                            // the auto routine
-                            // 2. The actual auto routine command, which is a PathPlannerAuto object
-                            // constructed with the selected auto, based on the string, so make sure
-                            // they're the same
-                            if (selectedAuto2 == null || selectedAuto2.equals("No 2nd auto!")) {
-                                auto =
-                                        Commands.waitSeconds(delay)
-                                                .andThen(new PathPlannerAuto(selectedAuto1));
-                            } else if (selectedAuto3 == null
-                                    || selectedAuto3.equals("No 3rd auto!")) {
-                                auto =
-                                        Commands.waitSeconds(delay)
-                                                .andThen(new PathPlannerAuto(selectedAuto1))
-                                                .andThen(new PathPlannerAuto(selectedAuto2));
-                            } else {
+                            if (Constants.fusionAutosEnabled) {
+                                // Fusion autos: run all three selected routines sequentially.
+                                // To re-enable, set Constants.fusionAutosEnabled = true.
+                                String selectedAuto2 = autoChooser2.get();
+                                String selectedAuto3 = autoChooser3.get();
                                 auto =
                                         Commands.waitSeconds(delay)
                                                 .andThen(new PathPlannerAuto(selectedAuto1))
                                                 .andThen(new PathPlannerAuto(selectedAuto2))
                                                 .andThen(new PathPlannerAuto(selectedAuto3));
+                            } else {
+                                // NOTE: FUSION AUTOS ARE DISABLED — 2nd and 3rd autos are ignored.
+                                // Set Constants.fusionAutosEnabled = true to re-enable fusion.
+                                auto =
+                                        Commands.waitSeconds(delay)
+                                                .andThen(new PathPlannerAuto(selectedAuto1));
                             }
-                            ;
                         } catch (Exception e) {
                             // This should never happen, but if it does, we want to catch the
                             // exception and send a notification instead of crashing the robot code,

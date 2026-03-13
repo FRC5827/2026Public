@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trench to Outpost"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Outpost to Shoot"
+            "pathName": "Right Bump to Right Shoot"
           }
         },
         {
@@ -32,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Right Trench",
+  "folder": "Right Bump",
   "choreoAuto": false
 }

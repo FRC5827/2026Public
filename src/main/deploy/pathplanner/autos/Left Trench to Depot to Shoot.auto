@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Left Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Shoot to Outpost"
+            "pathName": "Left Trench to Depot"
           }
         },
         {
@@ -31,25 +19,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost to Shoot"
+            "pathName": "Depot to Shoot"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Shoot to Tower"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Climb"
           }
         }
       ]

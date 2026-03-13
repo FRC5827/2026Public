@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.0,
-        "y": 2.22
+        "x": 3.6608777777777783,
+        "y": 2.183555555555555
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.6678030303030305,
-        "y": 2.278134469696968
+        "x": 3.328680808080809,
+        "y": 2.241690025252523
       },
       "isLocked": false,
       "linkedName": "Right Bump"
     },
     {
       "anchor": {
-        "x": 2.3,
-        "y": 3.32
+        "x": 2.6766888888888887,
+        "y": 2.095855555555554
       },
       "prevControl": {
-        "x": 2.381802182968327,
-        "y": 3.021742525049914
+        "x": 3.037897727272727,
+        "y": 2.2079166666666663
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -45.0
+    "rotation": 43.7477414146049
   },
   "reversed": false,
   "folder": "Stage 0",

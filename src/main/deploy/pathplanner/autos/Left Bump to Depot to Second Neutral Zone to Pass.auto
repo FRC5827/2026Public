@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trench to Right Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Shoot to Depot"
+            "pathName": "Left Bump, Depot"
           }
         },
         {
@@ -43,19 +31,38 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Shoot to Tower"
+            "pathName": "Left Shoot to Second Run Left"
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Second Run Left to Right Neutral pile"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Climb"
+            "name": "Shoot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Right Trench",
+  "folder": "Left Bump",
   "choreoAuto": false
 }

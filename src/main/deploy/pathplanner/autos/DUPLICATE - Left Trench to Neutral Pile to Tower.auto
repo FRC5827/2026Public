@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Bump to Right Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Shoot to Outpost"
+            "pathName": "Left Bump, Depot"
           }
         },
         {
@@ -31,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost to Shoot"
+            "pathName": "Depot to Shoot"
           }
         },
         {
@@ -43,19 +31,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Shoot to Tower"
+            "pathName": "Left Shoot to Second Run Left"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Climb"
+            "name": "Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Second Run Left to Right Neutral pile"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Right Bump",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

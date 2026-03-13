@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.647,
-        "y": 5.185
+        "x": 4.0,
+        "y": 5.845473484848485
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.243123106060606,
-        "y": 4.437556818181818
+        "x": 2.165880681818182,
+        "y": 5.945132575757575
       },
       "isLocked": false,
-      "linkedName": "LeftShoot"
+      "linkedName": "LeftBump"
     },
     {
       "anchor": {
-        "x": 0.7375444444444446,
-        "y": 0.6634222222222217
+        "x": 0.942177777777778,
+        "y": 7.504022222222222
       },
       "prevControl": {
-        "x": 3.129362626262626,
-        "y": 0.37274987373737417
+        "x": 1.3709333333333333,
+        "y": 7.465044444444444
+      },
+      "nextControl": {
+        "x": 0.5158452116253047,
+        "y": 7.542779728236083
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.47444444444444445,
+        "y": 6.120311111111111
+      },
+      "prevControl": {
+        "x": 0.5426555555555554,
+        "y": 6.919355555555556
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "Depot"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
-  "folder": "Stage 1",
+  "folder": "Stage 0",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

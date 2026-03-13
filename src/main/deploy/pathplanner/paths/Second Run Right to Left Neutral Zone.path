@@ -3,45 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.647,
-        "y": 5.185
+        "x": 6.213922222222224,
+        "y": 1.316299999999999
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.014066666666667,
-        "y": 6.987566666666667
+        "x": 5.48308888888889,
+        "y": 1.5404222222222224
       },
       "isLocked": false,
-      "linkedName": "LeftShoot"
+      "linkedName": "Second Run Right to Left Neutral Zone Right "
     },
     {
       "anchor": {
-        "x": 0.9519222222222223,
-        "y": 7.3675999999999995
+        "x": 5.716955555555555,
+        "y": 4.054488888888889
       },
       "prevControl": {
-        "x": 1.5560777777777783,
-        "y": 7.6112111111111105
+        "x": 5.716955555555555,
+        "y": 3.5282888888888877
       },
       "nextControl": {
-        "x": 0.5683912401530413,
-        "y": 7.212950410455975
+        "x": 5.716955555555555,
+        "y": 4.561574647822801
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.47444444444444445,
-        "y": 6.120311111111111
+        "x": 6.213922222222224,
+        "y": 6.724466666666667
       },
       "prevControl": {
-        "x": 0.4744444444444445,
-        "y": 6.714722222222222
+        "x": 5.531811111111112,
+        "y": 6.529577777777778
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot"
+      "linkedName": "Second Run Right to Left Neutral Zone Left"
     }
   ],
   "rotationTargets": [],
@@ -58,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Stage 1",
+  "folder": "Neutral Zone Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
