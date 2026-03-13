@@ -35,9 +35,9 @@ public class Turret extends SubsystemBase {
     private static final LoggedTunableNumber yawZeroingOffset =
             new LoggedTunableNumber("Turret/Yaw/Zeroing Offset", -0.295);
     static final LoggedTunableNumber yawMinRotations =
-            new LoggedTunableNumber("Turret/Yaw/Min Rotations", -0.74);
+            new LoggedTunableNumber("Turret/Yaw/Min Rotations", -0.625);
     static final LoggedTunableNumber yawMaxRotations =
-            new LoggedTunableNumber("Turret/Yaw/Max Rotations", 0.0);
+            new LoggedTunableNumber("Turret/Yaw/Max Rotations", 0.125);
     static final LoggedTunableNumber yawKP = new LoggedTunableNumber("Turret/Yaw/kP", 120.0);
     static final LoggedTunableNumber yawKD = new LoggedTunableNumber("Turret/Yaw/kD", 0.0);
     static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Turret/Yaw/kS", 0.08);
@@ -68,7 +68,7 @@ public class Turret extends SubsystemBase {
                 yawZeroed = true;
                 io.setYawVoltage(0);
                 io.zeroYaw(yawZeroingOffset.get());
-            } else if (inputs.yawMotorSoftLimitTriggered) {
+            } else if (Math.abs(inputs.yawTurretPositionRotations) > 0.5) {
                 // If soft limit is triggered, assume limit switch has failed and that the turret
                 // started at 0.5 rotations and rotated to postion 0
                 yawZeroed = true;

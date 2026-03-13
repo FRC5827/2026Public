@@ -14,7 +14,6 @@ public interface TurretIO {
         public double yawMotorTemperature = 0.0;
         public double yawTurretPositionRotations = 0.0;
 
-        public boolean yawMotorSoftLimitTriggered = false;
         public boolean yawLimitSwitchPressed = false;
     }
 

@@ -33,8 +33,6 @@ public class TurretIOReal implements TurretIO {
     private final StatusSignal<Current> yawMotorCurrent;
     private final StatusSignal<Temperature> yawMotorTemperature;
     private final StatusSignal<Angle> yawMotorPosition;
-    private final StatusSignal<Boolean> yawMotorForwardSoftLimit;
-    private final StatusSignal<Boolean> yawMotorReverseSoftLimit;
 
     private final VoltageOut voltageRequest = new VoltageOut(0);
     private final PositionVoltage positionRequest = new PositionVoltage(0);
@@ -59,29 +57,15 @@ public class TurretIOReal implements TurretIO {
         yawConfig.Slot0.kD = Turret.yawKD.getAsDouble();
         yawConfig.Voltage.PeakForwardVoltage = 6.0;
         yawConfig.Voltage.PeakReverseVoltage = -6.0;
-
-        // at max try zeroing for 0.5 rotations
-        yawConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        yawConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.5;
-        yawConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        yawConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.5;
         PhoenixUtil.tryUntilOk(5, () -> yawMotor.getConfigurator().apply(yawConfig, 0.25));
 
         yawMotorVoltage = yawMotor.getMotorVoltage();
         yawMotorCurrent = yawMotor.getSupplyCurrent();
         yawMotorTemperature = yawMotor.getDeviceTemp();
         yawMotorPosition = yawMotor.getPosition();
-        yawMotorForwardSoftLimit = yawMotor.getFault_ForwardSoftLimit();
-        yawMotorReverseSoftLimit = yawMotor.getFault_ReverseSoftLimit();
 
         BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0,
-                yawMotorVoltage,
-                yawMotorCurrent,
-                yawMotorTemperature,
-                yawMotorPosition,
-                yawMotorForwardSoftLimit,
-                yawMotorReverseSoftLimit);
+                50.0, yawMotorVoltage, yawMotorCurrent, yawMotorTemperature, yawMotorPosition);
 
         ParentDevice.optimizeBusUtilizationForAll(yawMotor);
     }
@@ -90,20 +74,13 @@ public class TurretIOReal implements TurretIO {
     public void updateInputs(TurretIOInputs inputs) {
         var yawStatus =
                 BaseStatusSignal.refreshAll(
-                        yawMotorVoltage,
-                        yawMotorCurrent,
-                        yawMotorTemperature,
-                        yawMotorPosition,
-                        yawMotorForwardSoftLimit,
-                        yawMotorReverseSoftLimit);
+                        yawMotorVoltage, yawMotorCurrent, yawMotorTemperature, yawMotorPosition);
 
         inputs.yawConnected = yawStatus.isOK();
         inputs.yawMotorVoltage = yawMotorVoltage.getValueAsDouble();
         inputs.yawMotorCurrent = yawMotorCurrent.getValueAsDouble();
         inputs.yawMotorTemperature = yawMotorTemperature.getValueAsDouble();
         inputs.yawTurretPositionRotations = yawMotorPosition.getValueAsDouble();
-        inputs.yawMotorSoftLimitTriggered =
-                yawMotorForwardSoftLimit.getValue() || yawMotorReverseSoftLimit.getValue();
 
         inputs.yawLimitSwitchPressed = yawLimitSwitch.get();
         inputs.pitchServoRequestedPosition = pitchServoPosition;

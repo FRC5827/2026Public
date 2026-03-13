@@ -305,9 +305,6 @@ public class RobotContainer {
                 .leftBumper()
                 .onTrue(intakeDeployer.retractDeployer().withName("Deployer_Retract_LB_OnTrue"))
                 .onFalse(intakeDeployer.deployDeployer().withName("Deployer_Deploy_LB_OnFalse"));
-        controller
-                .rightBumper()
-                .onTrue(intakeDeployer.deployDeployer().withName("Deployer_Deploy_RB"));
 
         controller
                 .povUp()
@@ -326,6 +323,8 @@ public class RobotContainer {
                         hopperIndexer.runIndexerReverse().withName("Indexer_RunReverse_PovRight"))
                 .whileTrue(hopperKicker.runKickerReverse().withName("Kicker_RunReverse_PovRight"));
 
+        controller.povLeft().whileTrue(hopperIndexer.runIndexer().withName("Indexer_Run_PovLeft"));
+
         controller
                 .povDown()
                 .onTrue(
@@ -341,19 +340,22 @@ public class RobotContainer {
         controller
                 .rightStick()
                 .whileTrue(
-                        targeting
-                                .runOnce(() -> targeting.setTargetManual())
+                        Commands.run(() -> targeting.setTargetManual())
                                 .withName("Targeting_SetManual")
+                                .alongWith(
+                                        turret.aimAtTarget()
+                                                .withName("Turret_AimAtTarget_RS")
+                                                .alongWith(
+                                                        superstructure
+                                                                .shootAtTarget()
+                                                                .withName(
+                                                                        "Superstructure_ShootAtTarget_RS"))
+                                                .alongWith(
+                                                        superstructure
+                                                                .runKickerAndIndexer()
+                                                                .withName(
+                                                                        "Superstructure_RunKickerAndIndexer_RS")))
                                 .finallyDo(() -> targeting.clearTarget())
-                                .alongWith(turret.aimAtTarget().withName("Turret_AimAtTarget_RS"))
-                                .alongWith(
-                                        superstructure
-                                                .shootAtTarget()
-                                                .withName("Superstructure_ShootAtTarget_RS"))
-                                .alongWith(
-                                        superstructure
-                                                .runKickerAndIndexer()
-                                                .withName("Superstructure_RunKickerAndIndexer_RS"))
                                 .withName("ManualShootTest_RightStick"));
     }
 

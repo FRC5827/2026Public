@@ -110,6 +110,7 @@ public class Targeting extends SubsystemBase {
     }
 
     public void setTargetManual() {
+        clearTarget();
         this.pitchAngle = manualTargetPitchAngleRad.get();
         this.shooterVelocity =
                 solveForVelocityWithAngle(pitchAngle, manualTargetDistanceMeters.get(), 0);

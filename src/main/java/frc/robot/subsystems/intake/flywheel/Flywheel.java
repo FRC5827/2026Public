@@ -12,7 +12,7 @@ public class Flywheel extends SubsystemBase {
     private final FlywheelIO io;
     private final FlywheelIOInputsAutoLogged inputs;
     private final LoggedTunableNumber flywheelVoltage =
-            new LoggedTunableNumber("Intake/Flywheel/flywheelVoltage", 4.0);
+            new LoggedTunableNumber("Intake/Flywheel/flywheelVoltage", 6.0);
 
     public Flywheel(FlywheelIO io) {
         this.io = io;

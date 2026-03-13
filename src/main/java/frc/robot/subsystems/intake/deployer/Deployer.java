@@ -31,26 +31,26 @@ public class Deployer extends SubsystemBase {
     static final LoggedTunableNumber DEPLOYER_kS =
             new LoggedTunableNumber("Intake/Deployer/kS", 0.0);
     static final LoggedTunableNumber DEPLOYER_kV =
-            new LoggedTunableNumber("Intake/Deployer/kV", 0.0);
+            new LoggedTunableNumber("Intake/Deployer/kV", 0.6);
     static final LoggedTunableNumber DEPLOYER_kA =
             new LoggedTunableNumber("Intake/Deployer/kA", 0.0);
     static final LoggedTunableNumber DEPLOYER_kG =
             new LoggedTunableNumber("Intake/Deployer/kG", 0.0);
 
     static final LoggedTunableNumber DEPLOYER_MAX_VELOCITY =
-            new LoggedTunableNumber("Intake/Deployer/Max Velocity", 3.0);
+            new LoggedTunableNumber("Intake/Deployer/Max Velocity", 10.0);
     static final LoggedTunableNumber DEPLOYER_MAX_ACCELERATION =
-            new LoggedTunableNumber("Intake/Deployer/Max Acceleration", 3.0);
+            new LoggedTunableNumber("Intake/Deployer/Max Acceleration", 15.0);
 
     // target points, 0 is always horizontal by convention
     static final LoggedTunableNumber DEPLOYER_RETRACT_ANGLE_RAD =
             new LoggedTunableNumber(
                     "Intake/Deployer/RetractPosition",
-                    Units.rotationsToRadians(0.385254)); // subject to change
+                    Units.rotationsToRadians(0.716797)); // subject to change
     static final LoggedTunableNumber DEPLOYER_DEPLOY_ANGLE_RAD =
             new LoggedTunableNumber(
                     "Intake/Deployer/DeployPosition",
-                    Units.rotationsToRadians(0.030518)); // subject to change
+                    Units.rotationsToRadians(0.376465)); // subject to change
     private final LoggedTunableNumber deployerVoltage =
             new LoggedTunableNumber("Intake/Deployer/Voltage", 2.0);
 
