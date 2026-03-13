@@ -163,4 +163,8 @@ public class Turret extends SubsystemBase {
                         inputs.yawTurretPositionRotations,
                         yawTolerance.get());
     }
+
+    public void setBrakeMode(boolean brake) {
+        io.setBrakeMode(brake);
+    }
 }

@@ -34,4 +34,6 @@ public interface TurretIO {
     public default void updateYawLimits(double minRotations, double maxRotations) {}
 
     public default void zeroYaw(double zeroingOffset) {}
+
+    public default void setBrakeMode(boolean brake) {}
 }

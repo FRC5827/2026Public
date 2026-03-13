@@ -164,4 +164,13 @@ public class TurretIOReal implements TurretIO {
         PhoenixUtil.tryUntilOk(5, () -> yawMotor.getConfigurator().apply(yawConfig, 0.25));
         PhoenixUtil.tryUntilOk(5, () -> yawMotor.setPosition(zeroingOffset));
     }
+
+    @Override
+    public void setBrakeMode(boolean brake) {
+        PhoenixUtil.tryUntilOk(
+                5,
+                () ->
+                        yawMotor.setNeutralMode(
+                                brake ? NeutralModeValue.Brake : NeutralModeValue.Coast));
+    }
 }

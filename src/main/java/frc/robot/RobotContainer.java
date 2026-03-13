@@ -390,4 +390,14 @@ public class RobotContainer {
 
         wasPreviouslyAligned = isCurrentlyAligned;
     }
+
+    public void enable() {
+        turret.setBrakeMode(true);
+        intakeDeployer.setBrakeMode(true);
+    }
+
+    public void disable() {
+        turret.setBrakeMode(false);
+        intakeDeployer.setBrakeMode(false);
+    }
 }

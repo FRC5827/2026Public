@@ -168,14 +168,6 @@ public class Robot extends LoggedRobot {
         Threads.setCurrentThreadPriority(false, 10);
     }
 
-    /** This function is called once when the robot is disabled. */
-    @Override
-    public void disabledInit() {}
-
-    /** This function is called periodically when disabled. */
-    @Override
-    public void disabledPeriodic() {}
-
     /**
      * This autonomous runs the autonomous command selected by your {@link RobotContainer} class.
      */
@@ -227,6 +219,16 @@ public class Robot extends LoggedRobot {
     /** This function is called periodically whilst in simulation. */
     @Override
     public void simulationPeriodic() {}
+
+    @Override
+    public void disabledInit() {
+        robotContainer.disable();
+    }
+
+    @Override
+    public void disabledExit() {
+        robotContainer.enable();
+    }
 
     /** Logs the full state of the CommandScheduler to AdvantageKit. */
     private void logCommandScheduler() {
