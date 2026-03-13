@@ -22,9 +22,9 @@ public class Turret extends SubsystemBase {
 
     // These values in radians
     static final LoggedTunableNumber pitchMinAngleRad =
-            new LoggedTunableNumber("Turret/Pitch/Min Angle Radians", Units.degreesToRadians(20));
+            new LoggedTunableNumber("Turret/Pitch/Min Angle Radians", Units.degreesToRadians(32));
     static final LoggedTunableNumber pitchMaxAngleRad =
-            new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", Units.degreesToRadians(85));
+            new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", Units.degreesToRadians(110));
 
     private static final LoggedTunableNumber yawZeroingVoltage =
             new LoggedTunableNumber("Turret/Yaw/Zeroing Voltage", 0.67);

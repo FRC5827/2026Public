@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -45,7 +46,7 @@ public class Targeting extends SubsystemBase {
                     Rotation3d.kZero);
     // Multiplier to account for lack of acceleration under hood
     static final LoggedTunableNumber shooterMultiplier =
-            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.4);
+            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.64);
 
     static final LoggedTunableNumber manualTargetPitchAngleRad =
             new LoggedTunableNumber(
@@ -338,6 +339,7 @@ public class Targeting extends SubsystemBase {
                             trajectoryCoefficients[2]);
             computedPitch = values[0];
 
+            // check if angle is valid
             if (computedPitch < Turret.pitchMinAngleRad.get()) {
                 computedPitch = Turret.pitchMinAngleRad.get();
                 computedVelocity =
@@ -347,6 +349,23 @@ public class Targeting extends SubsystemBase {
             } else {
                 computedPitch = Turret.pitchMaxAngleRad.get();
                 computedVelocity = 0;
+            }
+
+            // then check if velocity is valid
+            if (computedVelocity > Shooter.shooterMaxVelocity.get()) {
+                computedVelocity = Shooter.shooterMaxVelocity.get();
+                computedPitch =
+                        solveForAngleWithVelocity(computedVelocity, dist, shooterToTargetVertical);
+                if (computedPitch > Turret.pitchMaxAngleRad.get()
+                        || computedPitch < Turret.pitchMinAngleRad.get()) {
+                    // invalid angle
+                    computedPitch =
+                            MathUtil.clamp(
+                                    computedPitch,
+                                    Turret.pitchMinAngleRad.get(),
+                                    Turret.pitchMaxAngleRad.get());
+                    computedVelocity = 0;
+                }
             }
 
             computedVelocity = Math.max(computedVelocity, 0);
@@ -437,5 +456,32 @@ public class Targeting extends SubsystemBase {
                 (verticalDistance - b * horizontalDistance)
                         / (horizontalDistance * horizontalDistance);
         return solveForPitchAndVelocity(a, b, 0)[1];
+    }
+
+    public static double solveForAngleWithVelocity(
+            double velocity, double horizontalDistance, double verticalDistance) {
+        // y(x) = ax^2 + bx (c = is zero)
+        // second derivative of y(x) = d/dt(dy/dx) / dx/dt
+        // 2a = d/dt(dy/dt / dx/dt) / dx/dt
+        // 2a = d/dt((-gt + v * sin(angle)) / v * cos(angle)) / dx/dt
+        // 2a = -g / (v * cos(angle))^2
+        // full equation is can be simplified with 1/cos^2 = 1 + tan^2
+        // resulting in
+        double velocitySq = velocity * velocity;
+        double g = FieldConstants.PhysicalConstants.GRAVITY;
+        double discriminant =
+                velocitySq * velocitySq
+                        - g
+                                * (g * horizontalDistance * horizontalDistance
+                                        + 2 * verticalDistance * velocitySq);
+
+        if (discriminant < 0) {
+            return 0;
+        }
+
+        // return lower angle for faster shots, this is ok because for passing, we already tried to
+        // shoot at a low angle and this resulted in a velocity higher than our max, so we know both
+        // of these angles will be higher
+        return Math.atan((velocitySq + Math.sqrt(discriminant)) / (g * horizontalDistance));
     }
 }

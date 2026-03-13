@@ -226,26 +226,7 @@ public class RobotContainer {
         // path segments.
         // I don't like proxying, but unfortunately it's the only way that works without massive
         // refactoring
-        NamedCommands.registerCommand(
-                "Shoot",
-                turret.aimAtTarget()
-                        .withName("NC_Shoot_AimAtTarget")
-                        .alongWith(
-                                Commands.waitUntil(shooter::isShooterAtVelocity)
-                                        .withName("NC_Shoot_WaitForVelocity"))
-                        .withName("NC_Shoot_AimAndWait")
-                        .andThen(
-                                Commands.parallel(
-                                                hopperIndexer
-                                                        .runIndexer()
-                                                        .withName("NC_Shoot_RunIndexer"),
-                                                hopperKicker
-                                                        .runKicker()
-                                                        .withName("NC_Shoot_RunKicker"))
-                                        .withName("NC_Shoot_IndexAndKick"))
-                        .andThen(shooter.shootAtTarget().withName("NC_Shoot_ShootAtTarget"))
-                        .withName("NC_Shoot")
-                        .asProxy());
+        NamedCommands.registerCommand("Shoot", superstructure.aimAndShoot().asProxy());
 
         // Intake command: run intake flywheel (proxied so auto doesn't hold Flywheel requirement)
         NamedCommands.registerCommand(
@@ -303,7 +284,8 @@ public class RobotContainer {
                 .whileTrue(intakeFlywheel.runIntake().withName("Intake_RunFlywheel_LT"));
         controller
                 .leftBumper()
-                .onTrue(intakeDeployer.retractDeployer().withName("Deployer_Retract_LB_OnTrue"))
+                .whileTrue(intakeFlywheel.runIntake().withName("Intake_RunFlywheel_LB"))
+                .onTrue(intakeDeployer.liftDeployer().withName("Deployer_Lift_LB_OnTrue"))
                 .onFalse(intakeDeployer.deployDeployer().withName("Deployer_Deploy_LB_OnFalse"));
 
         controller
@@ -367,8 +349,9 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Commands.sequence(
-                        intakeDeployer.deployDeployer().withName("Auto_DeployIntake"),
+        // return Commands.parallel(intakeDeployer.liftDeployer(), new PathPlannerAuto("test"));
+        return Commands.parallel(
+                        intakeDeployer.liftDeployer().withName("Auto_DeployIntake"),
                         autoChooser.get())
                 .withName("Auto_FullSequence");
     }

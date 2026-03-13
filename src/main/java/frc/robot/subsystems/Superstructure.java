@@ -36,9 +36,9 @@ public final class Superstructure extends SubsystemBase {
     private final Field2d field2d = new Field2d();
 
     private static final LoggedTunableNumber hubEdgeDY =
-            new LoggedTunableNumber("Shooter/Hub Edge dy", 0.3);
+            new LoggedTunableNumber("Targeting/Hub Edge dy", 0.5);
     private static final LoggedTunableNumber hubEdgeDX =
-            new LoggedTunableNumber("Shooter/Hub Edge dx", 0.84);
+            new LoggedTunableNumber("Targeting/Hub Edge dx", 0.6);
 
     public Superstructure(
             Shooter shooter,

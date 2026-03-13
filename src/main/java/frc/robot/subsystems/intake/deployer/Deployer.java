@@ -67,7 +67,7 @@ public class Deployer extends SubsystemBase {
     private final ArmFeedforward deployerFeedforward;
     private TrapezoidProfile motionProfile;
     private TrapezoidProfile.State profileCurrentState, profileGoalState;
-    private boolean doMotionProfiling = false;
+    private boolean doMotionProfiling = true;
     private boolean atSetpoint = false;
 
     public Deployer(DeployerIO io) {
@@ -83,7 +83,7 @@ public class Deployer extends SubsystemBase {
                                 DEPLOYER_MAX_VELOCITY.get(), DEPLOYER_MAX_ACCELERATION.get()));
 
         profileCurrentState = new TrapezoidProfile.State(DEPLOYER_RETRACT_ANGLE_RAD.get(), 0.0);
-        profileGoalState = new TrapezoidProfile.State(DEPLOYER_RETRACT_ANGLE_RAD.get(), 0.0);
+        profileGoalState = new TrapezoidProfile.State(DEPLOYER_DEPLOY_ANGLE_RAD.get(), 0.0);
     }
 
     @Override
@@ -198,6 +198,17 @@ public class Deployer extends SubsystemBase {
         return this.runOnce(
                         () -> {
                             profileGoalState.position = DEPLOYER_DEPLOY_ANGLE_RAD.get();
+                            atSetpoint = false;
+                            doMotionProfiling = true;
+                        })
+                .andThen(Commands.waitUntil(() -> atSetpoint));
+    }
+
+    public Command liftDeployer() {
+        return this.runOnce(
+                        () -> {
+                            profileGoalState.position =
+                                    DEPLOYER_DEPLOY_ANGLE_RAD.get() + Math.PI / 2.0;
                             atSetpoint = false;
                             doMotionProfiling = true;
                         })

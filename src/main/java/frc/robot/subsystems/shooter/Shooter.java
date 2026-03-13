@@ -24,10 +24,12 @@ public class Shooter extends SubsystemBase {
             new LoggedTunableNumber("Shooter/Open Loop Voltage", 0.5);
     private static final LoggedTunableNumber shooterTolerance =
             new LoggedTunableNumber("Shooter/ToleranceMPS", 1.25);
+    static final LoggedTunableNumber shooterMaxVelocity =
+            new LoggedTunableNumber("shooter/Max Velocity MPS", 14.0);
     static final LoggedTunableNumber shooterKP = new LoggedTunableNumber("Shooter/kP", 0.5);
     static final LoggedTunableNumber shooterKD = new LoggedTunableNumber("Shooter/kD", 0.0);
     static final LoggedTunableNumber shooterKS = new LoggedTunableNumber("Shooter/kS", 0.0);
-    static final LoggedTunableNumber shooterKV = new LoggedTunableNumber("Shooter/kV", 0.76);
+    static final LoggedTunableNumber shooterKV = new LoggedTunableNumber("Shooter/kV", 0.38);
 
     private SimpleMotorFeedforward shooterFeedforward =
             new SimpleMotorFeedforward(shooterKS.get(), shooterKV.get());
