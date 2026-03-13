@@ -103,7 +103,8 @@ public class AutoChooser extends SubsystemBase {
                             .withDescription(
                                     "Ask code team if you're confused. Match starting? Set to 'No auto' & complain later, as comp auto WON'T BE RUN. Know what you're doing? Disregard.")
                             .withLevel(NotificationLevel.WARNING)
-                            .withNoAutoDismiss());
+                            .withDisplaySeconds(
+                                    600)); // FIRST aims for 7-10 minute match cycles (Section 6.1)
         } else {
             locationChooser1 =
                     new LoggedDashboardChooser<>(
@@ -262,7 +263,8 @@ public class AutoChooser extends SubsystemBase {
                             .withDescription(
                                     "Unexpected behavior may result otherwise. Select different location, and then change it back, even if same location on EACH auto!")
                             .withLevel(NotificationLevel.WARNING)
-                            .withNoAutoDismiss());
+                            .withDisplaySeconds(
+                                    600)); // FIRST aims for 7-10 minute match cycles (Section 6.1)
         }
     }
 
@@ -333,7 +335,9 @@ public class AutoChooser extends SubsystemBase {
                                         .withDescription(
                                                 "No SysId routine will be run. If that is not your intent, make sure you set a SysId routine")
                                         .withLevel(NotificationLevel.WARNING)
-                                        .withNoAutoDismiss());
+                                        .withDisplaySeconds(
+                                                600)); // FIRST aims for 7-10 minute match cycles
+                        // (Section 6.1)
                         auto = Commands.none();
                     } else {
                         // Similar to the competition auto routines, the SysId routine command
@@ -410,7 +414,9 @@ public class AutoChooser extends SubsystemBase {
                                         .withDescription(
                                                 "No auto will be run. If that's is not your intent, make sure you set an auto")
                                         .withLevel(NotificationLevel.WARNING)
-                                        .withNoAutoDismiss());
+                                        .withDisplaySeconds(
+                                                600)); // FIRST aims for 7-10 minute match cycles
+                        // (Section 6.1)
                         auto = Commands.none();
                     } else if (autoName.contains("No 2nd auto!")) {
                         Elastic.sendNotification(
@@ -507,7 +513,9 @@ public class AutoChooser extends SubsystemBase {
                                             .withDescription(
                                                     "Error loading auto: " + e.getMessage())
                                             .withLevel(NotificationLevel.ERROR)
-                                            .withNoAutoDismiss());
+                                            .withDisplaySeconds(
+                                                    600)); // FIRST aims for 7-10 minute match
+                            // cycles (Section 6.1)
                             e.printStackTrace();
                             auto = Commands.none();
                         }
