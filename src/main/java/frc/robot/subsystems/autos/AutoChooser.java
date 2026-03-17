@@ -453,7 +453,9 @@ public class AutoChooser extends SubsystemBase {
                                 // Set Constants.fusionAutosEnabled = true to re-enable fusion.
                                 auto =
                                         Commands.waitSeconds(delay)
-                                                .andThen(new PathPlannerAuto(selectedAuto1));
+                                                .andThen(
+                                                        new PathPlannerAuto(selectedAuto1)
+                                                                .withName(selectedAuto1));
                             }
                         } catch (Exception e) {
                             // This should never happen, but if it does, we want to catch the

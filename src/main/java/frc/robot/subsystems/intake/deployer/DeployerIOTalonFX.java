@@ -4,9 +4,11 @@ import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -41,6 +43,16 @@ public class DeployerIOTalonFX implements DeployerIO {
     private final PositionVoltage positionRequest = new PositionVoltage(0.0);
 
     public DeployerIOTalonFX() {
+        CANcoder deployerEncoder =
+                new CANcoder(Constants.intakeDeployerCancoder_ID, Constants.canivore);
+
+        CANcoderConfiguration encoderConfig = new CANcoderConfiguration();
+        encoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.0;
+
+        PhoenixUtil.tryUntilOk(
+                5, () -> deployerEncoder.getConfigurator().apply(encoderConfig, 0.25));
+        deployerEncoder.close();
+
         deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID, Constants.canivore);
         deployerConfig = new TalonFXConfiguration();
         deployerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;

@@ -47,16 +47,10 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeNoTimeout"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
           }
         }
       ]

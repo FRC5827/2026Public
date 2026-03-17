@@ -2,7 +2,6 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -22,10 +21,12 @@ public class Turret extends SubsystemBase {
 
     // These values in radians
     static final LoggedTunableNumber pitchMinAngleRad =
-            new LoggedTunableNumber("Turret/Pitch/Min Angle Radians", Units.degreesToRadians(32));
+            new LoggedTunableNumber("Turret/Pitch/Min Angle Radians", 1.372);
     static final LoggedTunableNumber pitchMaxAngleRad =
-            new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", Units.degreesToRadians(110));
+            new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", 1.373);
 
+    private static final LoggedTunableNumber yawTurretFlipVoltage =
+            new LoggedTunableNumber("Turret/Yaw/Turret Flip Voltage", -4.0);
     private static final LoggedTunableNumber yawZeroingVoltage =
             new LoggedTunableNumber("Turret/Yaw/Zeroing Voltage", 0.67);
     private static final LoggedTunableNumber yawOpenLoopVoltage =
@@ -46,6 +47,9 @@ public class Turret extends SubsystemBase {
     @AutoLogOutput(key = "Turret/Yaw Zeroed")
     private boolean yawZeroed = false;
 
+    @AutoLogOutput(key = "Turret/Zero Step 1")
+    private boolean turretFlipped = false;
+
     private SimpleMotorFeedforward yawFeedforward =
             new SimpleMotorFeedforward(yawKS.get(), yawKV.get());
 
@@ -62,18 +66,21 @@ public class Turret extends SubsystemBase {
         Logger.processInputs("Turret", inputs);
 
         checkForPIDUpdates();
-
-        if (!yawZeroed) {
+        if (!turretFlipped) {
+            if (inputs.yawTurretPositionRotations < yawZeroingOffset.get() - 0.1) {
+                turretFlipped = true;
+            } else {
+                io.setYawVoltage(yawTurretFlipVoltage.get());
+            }
+        } else if (!yawZeroed) {
             if (inputs.yawLimitSwitchPressed) {
                 yawZeroed = true;
                 io.setYawVoltage(0);
                 io.zeroYaw(yawZeroingOffset.get());
-            } else if (Math.abs(inputs.yawTurretPositionRotations) > 0.5) {
-                // If soft limit is triggered, assume limit switch has failed and that the turret
-                // started at 0.5 rotations and rotated to postion 0
+            } else if (inputs.yawTurretPositionRotations > 0) {
+                // If we pass zero again, assume limit switch failed
                 yawZeroed = true;
                 io.setYawVoltage(0);
-                io.zeroYaw(0);
             } else {
                 io.setYawVoltage(yawZeroingVoltage.get());
             }

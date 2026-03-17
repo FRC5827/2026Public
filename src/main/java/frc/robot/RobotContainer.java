@@ -82,7 +82,7 @@ public class RobotContainer {
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
-    private AutoChooser autoChooser;
+    private final AutoChooser autoChooser;
 
     // Trench alignment detection
     private boolean wasPreviouslyAligned = false;
@@ -122,7 +122,7 @@ public class RobotContainer {
 
                 targeting = new Targeting(drive::getPose);
                 shooter = new Shooter(new ShooterIOReal(), targeting);
-                turret = new Turret(new TurretIOReal(), targeting);
+                turret = new Turret(new TurretIOReal() {}, targeting);
 
                 hopperIndexer = new Indexer(new IndexerIOTalonFX());
                 hopperKicker = new Kicker(new KickerIOTalonFX());
@@ -217,22 +217,66 @@ public class RobotContainer {
 
     private void registerNamedCommands() {
         // Named commands are commands in PathPlanner that are given a name so they can be directly
-        // used in autos in PathPlanner. These should use only direct subsystem commands, not
-        // Superstructure (which is reserved for button bindings and manual control).
+        // used in autos in PathPlanner.
 
-        // Shoot command: aim at hub, wait for shooter to reach velocity, then shoot with hopper.
-        // Wrapped in asProxy() so the auto sequence doesn't hold Turret/Targeting requirements
-        // for the entire auto — this allows the turret's default aiming command to run between
-        // path segments.
         // I don't like proxying, but unfortunately it's the only way that works without massive
         // refactoring
-        NamedCommands.registerCommand("Shoot", superstructure.aimAndShoot().asProxy());
+        // What proxying does is that it prevents the requirements in a part of the composition from
+        // "bleeding" into the entire command. For example, in both Shoot and Intake, we don't want
+        // the deployer to bleed out because it will conflict with the lowering at the beginning of
+        // auto.
+        // Proxying is a hack that is used way too much here but our code seems to have command
+        // requirements collide every 2 seconds
+        NamedCommands.registerCommand(
+                "Shoot",
+                Commands.deadline(
+                                Commands.parallel(
+                                        superstructure
+                                                .aimAndShoot()
+                                                .asProxy()
+                                                .withName("AimAndShoot"),
+                                        intakeDeployer
+                                                .liftDeployer()
+                                                .asProxy()
+                                                .withName("LiftDeployer")),
+                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
+                        .withTimeout(4.0)
+                        .withName("NC_Shoot"));
 
-        // Intake command: run intake flywheel (proxied so auto doesn't hold Flywheel requirement)
+        NamedCommands.registerCommand(
+                "ShootNoIntake",
+                superstructure
+                        .aimAndShoot()
+                        .asProxy()
+                        .withTimeout(5.0)
+                        .withName("NC_ShootNoIntake"));
+
+        // Intake command: run intake flywheel and deploy intake. Wrapped in a sequence to ensure
+        // deploy runs before flywheel
         NamedCommands.registerCommand(
                 "Intake",
-                intakeFlywheel.runIntake().withTimeout(2.0).withName("NC_Intake").asProxy());
-
+                Commands.sequence(
+                                intakeDeployer
+                                        .deployDeployer()
+                                        .asProxy()
+                                        .withName("DeployDeployer"),
+                                // Because of the timeout, this command is meant for depot and
+                                // outpost
+                                intakeFlywheel
+                                        .runIntake()
+                                        .asProxy()
+                                        .withTimeout(2.0)
+                                        .withName("RunIntake"))
+                        .withName("NC_Intake"));
+        NamedCommands.registerCommand(
+                "IntakeNoTimeout",
+                Commands.sequence(
+                                intakeDeployer
+                                        .deployDeployer()
+                                        .asProxy()
+                                        .withName("DeployDeployer"),
+                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
+                        .withName("NC_IntakeNoTimeout"));
         // Climb command: placeholder for future implementation
         NamedCommands.registerCommand("Climb", Commands.print("CLIMB!").withName("NC_Climb"));
     }
@@ -267,16 +311,19 @@ public class RobotContainer {
         // Reset gyro to 0° when B button is pressed
         controller
                 .b()
-                .onTrue(
-                        Commands.runOnce(
-                                        () ->
-                                                drive.setPose(
-                                                        new Pose2d(
-                                                                drive.getPose().getTranslation(),
-                                                                Rotation2d.kZero)),
-                                        drive)
-                                .ignoringDisable(true)
-                                .withName("Drive_ResetGyro_B"));
+                .whileTrue(
+                        Commands.waitSeconds(3.0)
+                                .andThen(
+                                        Commands.runOnce(
+                                                        () ->
+                                                                drive.setPose(
+                                                                        new Pose2d(
+                                                                                drive.getPose()
+                                                                                        .getTranslation(),
+                                                                                Rotation2d.kZero)),
+                                                        drive)
+                                                .ignoringDisable(true)
+                                                .withName("Drive_ResetGyro_B")));
 
         // intake controls
         controller
@@ -311,36 +358,29 @@ public class RobotContainer {
 
         controller
                 .povDown()
-                .onTrue(
-                        intakeDeployer
-                                .retractDeployer()
-                                .withName("Deployer_Retract_PovDown_OnTrue"))
-                .onFalse(
-                        intakeDeployer
-                                .deployDeployer()
-                                .withName("Deployer_Deploy_PovDown_OnFalse"));
+                .onTrue(intakeDeployer.liftDeployer().withName("Deployer_Retract_PovDown_OnTrue"));
 
         // temporary testing command for tuning shooter
-        controller
-                .rightStick()
-                .whileTrue(
-                        Commands.run(() -> targeting.setTargetManual())
-                                .withName("Targeting_SetManual")
-                                .alongWith(
-                                        turret.aimAtTarget()
-                                                .withName("Turret_AimAtTarget_RS")
-                                                .alongWith(
-                                                        superstructure
-                                                                .shootAtTarget()
-                                                                .withName(
-                                                                        "Superstructure_ShootAtTarget_RS"))
-                                                .alongWith(
-                                                        superstructure
-                                                                .runKickerAndIndexer()
-                                                                .withName(
-                                                                        "Superstructure_RunKickerAndIndexer_RS")))
-                                .finallyDo(() -> targeting.clearTarget())
-                                .withName("ManualShootTest_RightStick"));
+        /*controller
+        .rightStick()
+        .whileTrue(
+                Commands.run(() -> targeting.setTargetManual())
+                        .withName("Targeting_SetManual")
+                        .alongWith(
+                                turret.aimAtTarget()
+                                        .withName("Turret_AimAtTarget_RS")
+                                        .alongWith(
+                                                superstructure
+                                                        .shootAtTarget()
+                                                        .withName(
+                                                                "Superstructure_ShootAtTarget_RS"))
+                                        .alongWith(
+                                                superstructure
+                                                        .runKickerAndIndexer()
+                                                        .withName(
+                                                                "Superstructure_RunKickerAndIndexer_RS")))
+                        .finallyDo(() -> targeting.clearTarget())
+                        .withName("ManualShootTest_RightStick"));*/
     }
 
     /**
@@ -350,10 +390,8 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // return Commands.parallel(intakeDeployer.liftDeployer(), new PathPlannerAuto("test"));
-        return Commands.parallel(
-                        intakeDeployer.liftDeployer().withName("Auto_DeployIntake"),
-                        autoChooser.get())
-                .withName("Auto_FullSequence");
+        return autoChooser.get().withName("Auto_FullSequence");
+        // return new PathPlannerAuto("Left Trench to Shoot to Depot");
     }
 
     /**
@@ -371,9 +409,10 @@ public class RobotContainer {
             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
         }
 
-        if (isCurrentlyAligned) {
+        /*if (isCurrentlyAligned) {
+            targeting.clearTarget();
             targeting.lowerForTrench();
-        }
+        }*/
 
         wasPreviouslyAligned = isCurrentlyAligned;
     }

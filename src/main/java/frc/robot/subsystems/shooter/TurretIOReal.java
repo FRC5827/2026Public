@@ -49,7 +49,6 @@ public class TurretIOReal implements TurretIO {
         yawLimitSwitch = new DigitalInput(Constants.turretYawLimitSwitchDIO);
 
         yawConfig = new TalonFXConfiguration();
-        yawConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         yawConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         yawConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
         yawConfig.Feedback.SensorToMechanismRatio = Turret.YAW_GEAR_RATIO;
@@ -58,6 +57,8 @@ public class TurretIOReal implements TurretIO {
         yawConfig.Voltage.PeakForwardVoltage = 6.0;
         yawConfig.Voltage.PeakReverseVoltage = -6.0;
         PhoenixUtil.tryUntilOk(5, () -> yawMotor.getConfigurator().apply(yawConfig, 0.25));
+
+        yawMotor.setPosition(0);
 
         yawMotorVoltage = yawMotor.getMotorVoltage();
         yawMotorCurrent = yawMotor.getSupplyCurrent();

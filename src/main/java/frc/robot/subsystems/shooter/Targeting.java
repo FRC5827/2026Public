@@ -46,7 +46,7 @@ public class Targeting extends SubsystemBase {
                     Rotation3d.kZero);
     // Multiplier to account for lack of acceleration under hood
     static final LoggedTunableNumber shooterMultiplier =
-            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.64);
+            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.0);
 
     static final LoggedTunableNumber manualTargetPitchAngleRad =
             new LoggedTunableNumber(
@@ -57,7 +57,6 @@ public class Targeting extends SubsystemBase {
     static final LoggedTunableNumber distanceFromCornerToCornerShot =
             new LoggedTunableNumber("Targeting/Distance From Corner To Corner Shot", 0.5);
 
-    public static LoggedDashboardChooser<Boolean> overrideTimeRestrictions;
     public static LoggedDashboardChooser<Boolean>
             targetCornerIsLeftCorner; // Depot corner, Outpost Corner
 
@@ -88,11 +87,6 @@ public class Targeting extends SubsystemBase {
         this.yFilter = LinearFilter.movingAverage(10);
         this.rFilter = LinearFilter.movingAverage(10);
 
-        overrideTimeRestrictions =
-                new LoggedDashboardChooser<>("Override Time Restrictions", new SendableChooser<>());
-        overrideTimeRestrictions.addDefaultOption("False", false);
-        overrideTimeRestrictions.addOption("True", true);
-
         targetCornerIsLeftCorner =
                 new LoggedDashboardChooser<>("Chosen Corner For Passing", new SendableChooser<>());
         targetCornerIsLeftCorner.addDefaultOption("Left Corner", true);
@@ -121,7 +115,7 @@ public class Targeting extends SubsystemBase {
     }
 
     public void lowerForTrench() {
-        this.pitchAngle = Turret.pitchMinAngleRad.get();
+        this.pitchAngle = Turret.pitchMaxAngleRad.get();
         this.shooterVelocity = 0.0;
         this.yawVelocity = 0.0;
         this.canAimAtTarget = false;
@@ -148,7 +142,6 @@ public class Targeting extends SubsystemBase {
                         0);
 
         double distanceFromTrench;
-        double trenchHeight;
         Pose2d robotPose = robotPoseSupplier.get();
         if (targetCornerIsLeftCorner.get()) {
             distanceFromTrench =
@@ -159,7 +152,6 @@ public class Targeting extends SubsystemBase {
                                             FieldConstants.LinesVertical.hubCenter,
                                             FieldConstants.fieldWidth
                                                     - FieldConstants.LeftTrench.width));
-            trenchHeight = FieldConstants.LeftTrench.height;
         } else {
             distanceFromTrench =
                     robotPose
@@ -168,16 +160,11 @@ public class Targeting extends SubsystemBase {
                                     new Translation2d(
                                             FieldConstants.LinesVertical.hubCenter,
                                             FieldConstants.RightTrench.width));
-            trenchHeight = FieldConstants.RightTrench.height;
         }
 
         targetTranslation = AllianceFlipUtil.apply(targetTranslation);
 
-        setTarget(
-                targetTranslation,
-                new Translation2d(
-                        distanceFromTrench,
-                        trenchHeight + Units.inchesToMeters(5.91))); // atleast 0.5 balls above
+        setTarget(targetTranslation, new Translation2d(distanceFromTrench, 1.8));
     }
 
     /** Returns {@code true} if a target is currently set. */
@@ -348,11 +335,12 @@ public class Targeting extends SubsystemBase {
                 computedVelocity = values[1];
             } else {
                 computedPitch = Turret.pitchMaxAngleRad.get();
-                computedVelocity = 0;
+                computedVelocity =
+                        solveForVelocityWithAngle(computedPitch, dist, shooterToTargetVertical);
             }
 
             // then check if velocity is valid
-            if (computedVelocity > Shooter.shooterMaxVelocity.get()) {
+            /*if (computedVelocity > Shooter.shooterMaxVelocity.get()) {
                 computedVelocity = Shooter.shooterMaxVelocity.get();
                 computedPitch =
                         solveForAngleWithVelocity(computedVelocity, dist, shooterToTargetVertical);
@@ -366,9 +354,10 @@ public class Targeting extends SubsystemBase {
                                     Turret.pitchMaxAngleRad.get());
                     computedVelocity = 0;
                 }
-            }
+            }*/
 
-            computedVelocity = Math.max(computedVelocity, 0);
+            computedVelocity =
+                    MathUtil.clamp(computedVelocity, 0, Shooter.shooterMaxVelocity.get());
         }
         return new double[] {computedPitch, computedVelocity};
     }
