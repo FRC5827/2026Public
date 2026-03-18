@@ -41,9 +41,11 @@ public class AutoChooser extends SubsystemBase {
     private Map<String, List<String>> autoNames;
     private Map<String, Command> sysIdRoutines = new HashMap<>();
     private String autoName;
+    private Runnable registerNamedCommands;
 
-    public AutoChooser(Drive drive) {
+    public AutoChooser(Drive drive, Runnable registerNamedCommands) {
         this.drive = drive;
+        this.registerNamedCommands = registerNamedCommands;
         this.auto = Commands.none();
         this.autoNames = new HashMap<>();
         this.autoName = "No auto!";
@@ -352,6 +354,8 @@ public class AutoChooser extends SubsystemBase {
                                         .withLevel(NotificationLevel.INFO));
                     }
                 } else {
+                    registerNamedCommands.run();
+
                     String loc1 = locationChooser1 != null ? locationChooser1.get() : "null";
                     String loc2 = locationChooser2 != null ? locationChooser2.get() : "null";
                     String loc3 = locationChooser3 != null ? locationChooser3.get() : "null";

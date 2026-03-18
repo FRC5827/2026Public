@@ -207,9 +207,7 @@ public class RobotContainer {
                 new Superstructure(shooter, targeting, turret, hopperKicker, hopperIndexer, drive);
 
         // Set up auto chooser
-        autoChooser = new AutoChooser(drive);
-
-        registerNamedCommands();
+        autoChooser = new AutoChooser(drive, this::registerNamedCommands);
 
         // Configure the button bindings
         configureButtonBindings();
