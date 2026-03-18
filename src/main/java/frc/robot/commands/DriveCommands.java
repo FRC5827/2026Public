@@ -89,9 +89,6 @@ public class DriveCommands {
                         omega *= SLOW_MODE_MULTIPLIER;
                     }
 
-                    linearVelocity = linearVelocity.times(0.75);
-                    omega *= 0.75;
-
                     ChassisSpeeds speeds =
                             new ChassisSpeeds(
                                     linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
