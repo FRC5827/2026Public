@@ -40,7 +40,7 @@ public class KickerIOTalonFX implements KickerIO {
 
     public KickerIOTalonFX() {
         // Create motor objects
-        this.motor = new TalonFX(Constants.hopperKickerMotorOpenCanbus_ID, Constants.canivore);
+        this.motor = new TalonFX(Constants.hopperKickerMotorOpenCanbus_ID);
 
         // Configure both motors
         config = new TalonFXConfiguration();

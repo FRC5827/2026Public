@@ -33,7 +33,7 @@ public class IndexerIOTalonFX implements IndexerIO {
     private final VoltageOut voltageOut = new VoltageOut(0.0);
 
     public IndexerIOTalonFX() {
-        this.motor = new TalonFX(Constants.hopperIndexerMotorOpenCanbus_ID, Constants.canivore);
+        this.motor = new TalonFX(Constants.hopperIndexerMotorOpenCanbus_ID);
 
         config = new TalonFXConfiguration();
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;

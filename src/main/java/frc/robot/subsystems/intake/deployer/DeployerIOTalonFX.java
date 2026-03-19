@@ -43,8 +43,7 @@ public class DeployerIOTalonFX implements DeployerIO {
     private final PositionVoltage positionRequest = new PositionVoltage(0.0);
 
     public DeployerIOTalonFX() {
-        CANcoder deployerEncoder =
-                new CANcoder(Constants.intakeDeployerCancoder_ID, Constants.canivore);
+        CANcoder deployerEncoder = new CANcoder(Constants.intakeDeployerCancoder_ID);
 
         CANcoderConfiguration encoderConfig = new CANcoderConfiguration();
         encoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.0;
@@ -53,7 +52,7 @@ public class DeployerIOTalonFX implements DeployerIO {
                 5, () -> deployerEncoder.getConfigurator().apply(encoderConfig, 0.25));
         deployerEncoder.close();
 
-        deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID, Constants.canivore);
+        deployerMotor = new TalonFX(Constants.intakeDeployerMotorCanbus_ID);
         deployerConfig = new TalonFXConfiguration();
         deployerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         deployerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;

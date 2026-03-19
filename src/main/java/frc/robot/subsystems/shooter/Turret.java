@@ -23,7 +23,7 @@ public class Turret extends SubsystemBase {
     static final LoggedTunableNumber pitchMinAngleRad =
             new LoggedTunableNumber("Turret/Pitch/Min Angle Radians", 1.372);
     static final LoggedTunableNumber pitchMaxAngleRad =
-            new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", 1.373);
+            new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", 1.372);
 
     private static final LoggedTunableNumber yawTurretFlipVoltage =
             new LoggedTunableNumber("Turret/Yaw/Turret Flip Voltage", -4.0);
@@ -34,15 +34,15 @@ public class Turret extends SubsystemBase {
     private static final LoggedTunableNumber yawTolerance =
             new LoggedTunableNumber("Turret/Yaw/Tolerance", 0.01);
     private static final LoggedTunableNumber yawZeroingOffset =
-            new LoggedTunableNumber("Turret/Yaw/Zeroing Offset", -0.295);
+            new LoggedTunableNumber("Turret/Yaw/Zeroing Offset", -0.293);
     static final LoggedTunableNumber yawMinRotations =
             new LoggedTunableNumber("Turret/Yaw/Min Rotations", -0.625);
     static final LoggedTunableNumber yawMaxRotations =
             new LoggedTunableNumber("Turret/Yaw/Max Rotations", 0.125);
     static final LoggedTunableNumber yawKP = new LoggedTunableNumber("Turret/Yaw/kP", 120.0);
-    static final LoggedTunableNumber yawKD = new LoggedTunableNumber("Turret/Yaw/kD", 0.0);
+    static final LoggedTunableNumber yawKD = new LoggedTunableNumber("Turret/Yaw/kD", 0.01);
     static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Turret/Yaw/kS", 0.08);
-    static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Turret/Yaw/kV", 5.64);
+    static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Turret/Yaw/kV", 5.4);
 
     @AutoLogOutput(key = "Turret/Yaw Zeroed")
     private boolean yawZeroed = false;
@@ -118,7 +118,9 @@ public class Turret extends SubsystemBase {
                             if (yawZeroed) {
                                 io.setPitchAngle(targeting.getPitchAngle());
 
-                                if (targeting.canAimAtTarget()) {
+                                if (targeting.getYawPosition() >= yawMinRotations.get()
+                                        && targeting.getYawPosition() <= yawMaxRotations.get()) {
+                                    // only move turret if in range
                                     io.setYawState(
                                             targeting.getYawPosition(),
                                             targeting.getYawVelocity(),
@@ -156,10 +158,6 @@ public class Turret extends SubsystemBase {
 
     public boolean isYawZeroed() {
         return yawZeroed;
-    }
-
-    public boolean canAimAtPosition(double position) {
-        return position >= yawMinRotations.get() && position <= yawMaxRotations.get();
     }
 
     public boolean isAimingAtTarget() {

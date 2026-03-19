@@ -45,7 +45,7 @@ public class TurretIOReal implements TurretIO {
         pitchServo1.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
         pitchServo2.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
 
-        yawMotor = new TalonFX(Constants.turretYawMotorCanbus_ID, Constants.canivore);
+        yawMotor = new TalonFX(Constants.turretYawMotorCanbus_ID);
         yawLimitSwitch = new DigitalInput(Constants.turretYawLimitSwitchDIO);
 
         yawConfig = new TalonFXConfiguration();

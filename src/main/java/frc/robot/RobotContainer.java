@@ -326,7 +326,8 @@ public class RobotContainer {
         // intake controls
         controller
                 .leftTrigger()
-                .whileTrue(intakeFlywheel.runIntake().withName("Intake_RunFlywheel_LT"));
+                .whileTrue(intakeFlywheel.runIntake().withName("Intake_RunFlywheel_LT"))
+                .whileTrue(hopperIndexer.runIndexer().withName("Indexer_Run_LT"));
         controller
                 .leftBumper()
                 .whileTrue(intakeFlywheel.runIntake().withName("Intake_RunFlywheel_LB"))

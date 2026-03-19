@@ -38,9 +38,8 @@ public class ShooterIOReal implements ShooterIO {
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
     public ShooterIOReal() {
-        shooterMotor = new TalonFX(Constants.shooterMotorCanbus_ID, Constants.shooterCANBus);
-        shooterMotorFollower =
-                new TalonFX(Constants.shooterMotorFollowerCanbus_ID, Constants.shooterCANBus);
+        shooterMotor = new TalonFX(Constants.shooterMotorCanbus_ID);
+        shooterMotorFollower = new TalonFX(Constants.shooterMotorFollowerCanbus_ID);
         shooterMotorFollower.setControl(
                 new Follower(shooterMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 

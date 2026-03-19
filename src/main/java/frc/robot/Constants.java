@@ -7,8 +7,6 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.CANBus;
-
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -38,7 +36,6 @@ public final class Constants {
         REPLAY
     }
 
-    public static final CANBus shooterCANBus = new CANBus("rio");
     public static final int shooterMotorCanbus_ID = 16;
     public static final int shooterMotorFollowerCanbus_ID = 17;
     public static final int turretPitchServo1PWM_ID = 0;
@@ -49,7 +46,6 @@ public final class Constants {
     public static final int hopperIndexerMotorOpenCanbus_ID = 20;
     public static final int hopperKickerMotorOpenCanbus_ID = 19;
 
-    public static final CANBus canivore = new CANBus("canivore");
     public static final int intakeDeployerMotorCanbus_ID = 22;
     public static final int intakeDeployerCancoder_ID = 23;
     public static final int intakeFlywheelMotorCanbus_ID = 21;

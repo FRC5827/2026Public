@@ -29,9 +29,9 @@ public class FieldUtil {
             return false;
         }
         if (alliance.get() == Alliance.Blue) {
-            return x < FieldConstants.LinesVertical.allianceZone;
+            return x < FieldConstants.LinesVertical.allianceZone + Constants.ROBOT_LENGTH;
         } else {
-            return x > FieldConstants.LinesVertical.oppAllianceZone;
+            return x > FieldConstants.LinesVertical.oppAllianceZone - Constants.ROBOT_LENGTH;
         }
     }
 

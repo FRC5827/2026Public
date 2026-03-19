@@ -8,10 +8,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -22,6 +22,7 @@ import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.function.Supplier;
@@ -36,6 +37,8 @@ import java.util.function.Supplier;
  * Shooter} directly.
  */
 public class Targeting extends SubsystemBase {
+    public static final double FILTER_TIME_CONSTANT = 0.13;
+
     // Translation of shooter from robot center (m)
     static final Transform3d SHOOTER_TRANSLATION_ON_ROBOT =
             new Transform3d(
@@ -46,7 +49,7 @@ public class Targeting extends SubsystemBase {
                     Rotation3d.kZero);
     // Multiplier to account for lack of acceleration under hood
     static final LoggedTunableNumber shooterMultiplier =
-            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.0);
+            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.13);
 
     static final LoggedTunableNumber manualTargetPitchAngleRad =
             new LoggedTunableNumber(
@@ -82,10 +85,10 @@ public class Targeting extends SubsystemBase {
     public Targeting(Supplier<Pose2d> robotPoseSupplier) {
         this.robotPoseSupplier = robotPoseSupplier;
         this.lastPose = robotPoseSupplier.get();
-        this.lastPoseTimestamp = Timer.getFPGATimestamp();
-        this.xFilter = LinearFilter.movingAverage(10);
-        this.yFilter = LinearFilter.movingAverage(10);
-        this.rFilter = LinearFilter.movingAverage(10);
+        this.lastPoseTimestamp = Timer.getTimestamp();
+        this.xFilter = LinearFilter.singlePoleIIR(FILTER_TIME_CONSTANT, 0.02);
+        this.yFilter = LinearFilter.singlePoleIIR(FILTER_TIME_CONSTANT, 0.02);
+        this.rFilter = LinearFilter.singlePoleIIR(FILTER_TIME_CONSTANT, 0.02);
 
         targetCornerIsLeftCorner =
                 new LoggedDashboardChooser<>("Chosen Corner For Passing", new SendableChooser<>());
@@ -181,23 +184,30 @@ public class Targeting extends SubsystemBase {
      */
     @Override
     public void periodic() {
+        double startTime = Timer.getFPGATimestamp();
+
         Pose2d robotPose = robotPoseSupplier.get();
-        double dt = (Timer.getFPGATimestamp() - lastPoseTimestamp);
-        Transform2d poseVelocity = robotPose.minus(lastPose).div(dt);
-        double filteredX = xFilter.calculate(poseVelocity.getX());
-        double filteredY = yFilter.calculate(poseVelocity.getY());
-        double filteredR = rFilter.calculate(poseVelocity.getRotation().getRotations());
-        Transform2d filteredTransform =
-                new Transform2d(filteredX, filteredY, Rotation2d.fromRotations(filteredR));
+        double dt = (Timer.getTimestamp() - lastPoseTimestamp);
+        double filteredX = xFilter.calculate((robotPose.getX() - lastPose.getX()) / dt);
+        double filteredY = yFilter.calculate((robotPose.getY() - lastPose.getY()) / dt);
+        double filteredR =
+                rFilter.calculate(
+                        (robotPose.getRotation().minus(lastPose.getRotation()).getRadians()) / dt);
+        ChassisSpeeds filteredVelocity = new ChassisSpeeds(filteredX, filteredY, filteredR);
+        Logger.recordOutput("Targeting/Filtered Robot Velocity", filteredVelocity);
+
         if (hasTarget()) {
-            update(robotPose, filteredTransform);
+            update(robotPose, filteredVelocity);
         } else {
             lowerForTrench();
         }
 
         // Advance pose tracking
         lastPose = robotPose;
-        lastPoseTimestamp = Timer.getFPGATimestamp();
+        lastPoseTimestamp = Timer.getTimestamp();
+
+        Logger.recordOutput(
+                "PerformanceMonitor/Targeting", (Timer.getFPGATimestamp() - startTime) * 1000);
     }
 
     // --- Getters ---
@@ -238,7 +248,7 @@ public class Targeting extends SubsystemBase {
 
     // --- Internal computation ---
 
-    private void update(Pose2d robotPose, Transform2d filteredVelocity) {
+    private void update(Pose2d robotPose, ChassisSpeeds filteredVelocity) {
 
         Translation3d shooterTranslation =
                 new Pose3d(robotPose).transformBy(SHOOTER_TRANSLATION_ON_ROBOT).getTranslation();
@@ -258,7 +268,18 @@ public class Targeting extends SubsystemBase {
 
             // combined with robot velocity get the new "effective shooter pose"
             shooterTranslation =
-                    new Pose3d(robotPose.transformBy(filteredVelocity.times(timeToScore)))
+                    new Pose3d(
+                                    new Pose2d(
+                                            robotPose.getX()
+                                                    + filteredVelocity.vxMetersPerSecond
+                                                            * timeToScore,
+                                            robotPose.getY()
+                                                    + filteredVelocity.vyMetersPerSecond
+                                                            * timeToScore,
+                                            Rotation2d.fromRadians(
+                                                    robotPose.getRotation().getRadians()
+                                                            + filteredVelocity.omegaRadiansPerSecond
+                                                                    * timeToScore)))
                             .transformBy(SHOOTER_TRANSLATION_ON_ROBOT)
                             .getTranslation();
             shooterToTargetTranslation = targetTranslation.minus(shooterTranslation);
@@ -282,23 +303,22 @@ public class Targeting extends SubsystemBase {
         double computedYawPosition =
                 calculateYawPosition(robotPose, shooterToTargetTranslation.toTranslation2d());
 
+        // apply modulus with the discontinuity outside of turret rotation
+        double discontinuityLow =
+                (Turret.yawMinRotations.get() + Turret.yawMaxRotations.get()) / 2.0 - 0.5;
+        computedYawPosition =
+                MathUtil.inputModulus(
+                        computedYawPosition, discontinuityLow, discontinuityLow + 1.0);
+
         canAimAtTarget =
                 computedYawPosition >= Turret.yawMinRotations.get()
                         && computedYawPosition <= Turret.yawMaxRotations.get()
                         && computedVelocity != 0;
 
-        double computedYawVelocity = 0.0;
-        // check if yaw in range before calculating velocity to avoid noise when target is out of
-        // range
-        if (computedYawPosition >= Turret.yawMinRotations.get()
-                && computedYawPosition <= Turret.yawMaxRotations.get()) {
-            computedYawVelocity = -filteredVelocity.getRotation().getRotations();
-        }
-
         pitchAngle = computedPitch;
         shooterVelocity = computedVelocity;
         yawPosition = computedYawPosition;
-        yawVelocity = computedYawVelocity;
+        yawVelocity = -Units.radiansToRotations(filteredVelocity.omegaRadiansPerSecond);
     }
 
     private double[] calculatePitchAndVelocityWithTranslations(

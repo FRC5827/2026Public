@@ -90,6 +90,7 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public Command aim() {
+        // TODO: if we add a hood, the code to lower said hood should be added here
         return (Commands.either(
                 aimAtHub(),
                 aimAtCorner(),
@@ -100,43 +101,37 @@ public final class Superstructure extends SubsystemBase {
 
     public Command aimAtHub() {
         return targeting
-                .runOnce(
+                .runEnd(
                         () -> {
                             targeting.setTarget(
                                     AllianceFlipUtil.shouldFlip()
                                             ? FieldConstants.Hub.oppInnerCenterPoint
                                             : FieldConstants.Hub.innerCenterPoint,
                                     new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
-                        })
-                .andThen(turret.aimAtTarget())
-                .finallyDo(() -> targeting.clearTarget());
+                        },
+                        () -> targeting.clearTarget())
+                .alongWith(turret.aimAtTarget());
     }
 
     public Command aimAtCorner() {
         return targeting
-                .runOnce(() -> targeting.aimAtCorner())
-                .andThen(turret.aimAtTarget())
-                .finallyDo(() -> targeting.clearTarget());
+                .runEnd(() -> targeting.aimAtCorner(), () -> targeting.clearTarget())
+                .alongWith(turret.aimAtTarget());
     }
 
-    public Command shootAtTarget() {
+    public Command runKickerAndIndexer() {
         return Commands.waitUntil(
                         () ->
-                                turret.isAimingAtTarget()
+                                isShootingAtTarget()
                                         && (GameTimeUtil.isHubActive(
                                                         targeting.getAirTimeToTarget()
                                                                 + DriverStation.getMatchTime())
                                                 || overrideTimeRestrictions.get()))
-                .andThen(shooter.shootAtTarget());
-    }
-
-    public Command runKickerAndIndexer() {
-        return Commands.waitUntil(shooter::isShooterAtVelocity)
                 .andThen(Commands.parallel(kicker.runKicker(), indexer.runIndexer()));
     }
 
     public Command aimAndShoot() {
-        return Commands.parallel(aim(), shootAtTarget(), runKickerAndIndexer());
+        return Commands.parallel(aim(), shooter.shootAtTarget(), runKickerAndIndexer());
     }
 
     public boolean isShootingAtTarget() {
