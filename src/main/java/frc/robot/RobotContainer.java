@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
@@ -342,7 +343,11 @@ public class RobotContainer {
         turret.setDefaultCommand(superstructure.aim().withName("Turret_Aim_Default"));
         controller
                 .rightTrigger()
-                .whileTrue(superstructure.aimAndShoot().withName("Superstructure_AimAndShoot_RT"))
+                .whileTrue(
+                        superstructure
+                                .aimAndShoot()
+                                .withName("Superstructure_AimAndShoot_RT")
+                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
                 .onTrue(DriveCommands.setSlowMode(true).withName("Set_Slow_Mode"))
                 .onFalse(DriveCommands.setSlowMode(false).withName("Set_Slow_Mode"));
 
