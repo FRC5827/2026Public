@@ -16,12 +16,12 @@ import edu.wpi.first.wpilibj.RobotBase;
  */
 public final class Constants {
     public static final Mode simMode = Mode.SIM;
-    public static final boolean tuningMode = false;
+    public static final boolean tuningMode = true;
     public static final boolean characterizationMode = false;
     public static final boolean fusionAutosEnabled = false;
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
-    public static final boolean simWithVision = true;
+    public static final boolean simWithVision = false;
 
     public static final double ROBOT_LENGTH = 0.8255; // meters (bumper-to-bumper length)
 
