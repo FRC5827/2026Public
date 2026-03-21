@@ -234,11 +234,17 @@ public class RobotContainer {
                                                         .aimAndShoot()
                                                         .asProxy()
                                                         .withName("AimAndShoot"),
-                                                Commands.repeatingSequence(intakeDeployer
-                                                        .liftDeployer()
-                                                        .asProxy()
-                                                        .withName("LiftDeployer").withTimeout(0.8),
-                                                        intakeDeployer.deployDeployer().asProxy().withName("DeployDeployer").withTimeout(0.2)))
+                                                Commands.repeatingSequence(
+                                                        intakeDeployer
+                                                                .liftDeployer()
+                                                                .asProxy()
+                                                                .withName("LiftDeployer")
+                                                                .withTimeout(0.8),
+                                                        intakeDeployer
+                                                                .deployDeployer()
+                                                                .asProxy()
+                                                                .withName("DeployDeployer")
+                                                                .withTimeout(0.2)))
                                         .beforeStarting(
                                                 hopperIndexer
                                                         .runIndexerReverse()
