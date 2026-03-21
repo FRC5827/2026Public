@@ -3,10 +3,15 @@ package frc.robot.util;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
+import frc.robot.Robot;
+
 import java.util.Optional;
 
 public class GameTimeUtil {
     private static final double BUFFER_TIME = 3.0;
+
+    private static double lastMatchTime = 0.0;
+    private static double estimatedMatchTime = 0.0;
 
     /*
      * Determines whether the hub is active based on the current match time and game data.
@@ -79,5 +84,24 @@ public class GameTimeUtil {
             // End game, hub always active.
             return true;
         }
+    }
+
+    /**
+     * ONLY CALL ONCE PER ROBOT CYCLE
+     *
+     * @return
+     */
+    public static void updateMatchTime() {
+        double matchTime = DriverStation.getMatchTime();
+        if (matchTime != lastMatchTime) {
+            estimatedMatchTime = matchTime;
+            lastMatchTime = matchTime;
+        } else {
+            estimatedMatchTime -= Robot.defaultPeriodSecs;
+        }
+    }
+
+    public static double getEstimatedMatchTime() {
+        return estimatedMatchTime;
     }
 }

@@ -76,6 +76,11 @@ public final class Superstructure extends SubsystemBase {
         Logger.recordOutput(
                 "PerformanceMonitor/Superstructure", (Timer.getFPGATimestamp() - startTime) * 1000);
 
+        // Update match time
+        GameTimeUtil.updateMatchTime();
+        Logger.recordOutput(
+                "GameTimeUtil/Estimated Match Time", GameTimeUtil.getEstimatedMatchTime());
+
         // Update Field2d
         field2d.setRobotPose(drive.getPose());
         if (targeting.hasTarget()) {
@@ -113,8 +118,7 @@ public final class Superstructure extends SubsystemBase {
                         () ->
                                 isShootingAtTarget()
                                         && (GameTimeUtil.isHubActive(
-                                                        DriverStation.getMatchTime()
-                                                                - 2.0)
+                                                        DriverStation.getMatchTime() - 2.0)
                                                 || overrideTimeRestrictions.get()))
                 .andThen(Commands.parallel(kicker.runKicker(), indexer.runIndexer()));
     }
