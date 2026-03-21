@@ -229,15 +229,16 @@ public class RobotContainer {
         NamedCommands.registerCommand(
                 "Shoot",
                 Commands.deadline(
-                                Commands.parallel(
+                                Commands.deadline(
                                                 superstructure
                                                         .aimAndShoot()
                                                         .asProxy()
                                                         .withName("AimAndShoot"),
-                                                intakeDeployer
+                                                Commands.repeatingSequence(intakeDeployer
                                                         .liftDeployer()
                                                         .asProxy()
-                                                        .withName("LiftDeployer"))
+                                                        .withName("LiftDeployer").withTimeout(0.8),
+                                                        intakeDeployer.deployDeployer().asProxy().withName("DeployDeployer").withTimeout(0.2)))
                                         .beforeStarting(
                                                 hopperIndexer
                                                         .runIndexerReverse()
