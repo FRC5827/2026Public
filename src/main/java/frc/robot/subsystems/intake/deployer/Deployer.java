@@ -50,7 +50,7 @@ public class Deployer extends SubsystemBase {
             new LoggedTunableNumber(
                     "Intake/Deployer/DeployPosition", Units.rotationsToRadians(-0.621338));
     static final LoggedTunableNumber FEEDFORWARD_ANGLE_OFFSET =
-            new LoggedTunableNumber("Intake/Deployer/FF Offset", 1.947);
+            new LoggedTunableNumber("Intake/Deployer/FF Offset", 0.376);
     private final LoggedTunableNumber deployerVoltage =
             new LoggedTunableNumber("Intake/Deployer/Voltage", 2.0);
 
@@ -209,7 +209,7 @@ public class Deployer extends SubsystemBase {
     public Command liftDeployer() {
         return this.runOnce(
                         () -> {
-                            profileGoalState.position = DEPLOYER_DEPLOY_ANGLE_RAD.get() + 1.376;
+                            profileGoalState.position = DEPLOYER_DEPLOY_ANGLE_RAD.get() + 1.39;
                             atSetpoint = false;
                             doMotionProfiling = true;
                         })

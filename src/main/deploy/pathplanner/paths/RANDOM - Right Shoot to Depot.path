@@ -9,18 +9,18 @@
       "prevControl": null,
       "nextControl": {
         "x": 2.7724810606060606,
-        "y": 5.110227272727271
+        "y": 5.11022727272727
       },
       "isLocked": false,
       "linkedName": "Right Shoot"
     },
     {
       "anchor": {
-        "x": 0.47444444444444445,
+        "x": 0.46,
         "y": 5.6
       },
       "prevControl": {
-        "x": 1.6147493686868688,
+        "x": 1.6003049242424243,
         "y": 5.583783838383838
       },
       "nextControl": null,
