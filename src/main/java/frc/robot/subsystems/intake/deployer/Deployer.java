@@ -204,7 +204,7 @@ public class Deployer extends SubsystemBase {
         return this.runOnce(
                         () -> {
                             profileGoalState.position =
-                                    DEPLOYER_DEPLOY_ANGLE_RAD.get() + Math.PI / 2.0;
+                                    DEPLOYER_DEPLOY_ANGLE_RAD.get() + 0.23;
                             atSetpoint = false;
                             doMotionProfiling = true;
                         })
