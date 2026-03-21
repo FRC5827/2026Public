@@ -203,8 +203,7 @@ public class Deployer extends SubsystemBase {
     public Command liftDeployer() {
         return this.runOnce(
                         () -> {
-                            profileGoalState.position =
-                                    DEPLOYER_DEPLOY_ANGLE_RAD.get() + 0.23;
+                            profileGoalState.position = DEPLOYER_DEPLOY_ANGLE_RAD.get() + 1.376;
                             atSetpoint = false;
                             doMotionProfiling = true;
                         })
