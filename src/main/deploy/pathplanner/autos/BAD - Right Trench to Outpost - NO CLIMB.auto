@@ -27,23 +27,11 @@
           "data": {
             "name": "Shoot"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Shoot to Tower"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Climb"
-          }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Right Trench",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Bump, Depot"
+            "pathName": "Right Trench to Right Neutral Zone Second Round Hairpin to Right Trench"
           }
         },
         {
@@ -20,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left Bump",
+  "folder": "Right Trench",
   "choreoAuto": false
 }

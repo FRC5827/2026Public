@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2455210387852684,
-        "y": 3.1965610605944565
+        "x": 2.7724810606060606,
+        "y": 5.110227272727271
       },
       "isLocked": false,
       "linkedName": "Right Shoot"
     },
     {
       "anchor": {
-        "x": 1.4765719696969695,
-        "y": 3.636363636363636
+        "x": 0.47444444444444445,
+        "y": 5.6
       },
       "prevControl": {
-        "x": 1.8253787878787877,
-        "y": 3.6529734848484843
+        "x": 1.6147493686868688,
+        "y": 5.583783838383838
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Tower"
+      "linkedName": "Depot"
     }
   ],
   "rotationTargets": [],
@@ -42,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
-  "folder": "Tower Paths",
+  "folder": "Random Paths",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 43.7477414146049

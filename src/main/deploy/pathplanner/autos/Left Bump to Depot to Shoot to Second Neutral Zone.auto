@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Intake"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Depot to Shoot"
@@ -31,26 +25,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Shoot to Second Run Left"
+            "pathName": "Left Shoot to Left Trench"
           }
         },
         {
-          "type": "deadline",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Second Run Left to Right Neutral pile"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeNoTimeout"
-                }
-              }
-            ]
+            "pathName": "Left Trench to Left Neutral Zone Second Round Hairpin to Left Trench"
           }
         }
       ]

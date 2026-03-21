@@ -17,46 +17,41 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Right Shoot to Neutral Pile"
-          }
-        },
-        {
-          "type": "deadline",
+          "type": "parallel",
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "deadline",
                 "data": {
-                  "pathName": "Right Neutral Zone to Left Neutral Zone"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RANDOM - Right Shoot to Depot"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "IntakeNoTimeout"
+                      }
+                    }
+                  ]
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "IntakeNoTimeout"
+                  "name": "Shoot"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Neutral Pile to Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Right Bump",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Depot"
+            "pathName": "Right Trench to Outpost"
           }
         },
         {
@@ -19,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Depot to Shoot"
+            "pathName": "Outpost to Shoot"
           }
         },
         {
@@ -31,7 +31,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Shoot to Tower"
+            "pathName": "Right Shoot to Tower"
           }
         },
         {
@@ -44,6 +44,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left Trench",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

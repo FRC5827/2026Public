@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Left Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
+            "pathName": "Left Bump to Left Shoot"
           }
         },
         {
@@ -23,22 +17,9 @@
           }
         },
         {
-          "type": "deadline",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Left Neutral Zone to Right Neutral Zone"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeNoTimeout"
-                }
-              }
-            ]
+            "pathName": "Left Neutral Zone to Right Neutral Zone"
           }
         },
         {
@@ -57,6 +38,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left Trench",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

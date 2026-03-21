@@ -11,39 +11,15 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Right Shoot to Neutral Pile"
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Intake"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Right Neutral Pile to Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Shoot to Tower"
           }
         },
         {
@@ -56,6 +32,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Right Trench",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

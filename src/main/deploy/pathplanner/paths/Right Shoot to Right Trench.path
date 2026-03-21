@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.6766888888888887,
-        "y": 2.095855555555554
+        "x": 2.4,
+        "y": 3.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0491699494949493,
-        "y": 4.206082828282826
+        "x": 3.4,
+        "y": 3.0
       },
       "isLocked": false,
       "linkedName": "Right Shoot"
     },
     {
       "anchor": {
-        "x": 0.47444444444444445,
-        "y": 5.6
+        "x": 4.0,
+        "y": 0.58
       },
       "prevControl": {
-        "x": 1.6147493686868688,
-        "y": 5.583783838383838
+        "x": 3.0,
+        "y": 0.5800000000000001
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot"
+      "linkedName": "Right Trench"
     }
   ],
   "rotationTargets": [],
@@ -42,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Random Paths",
+  "folder": "Stage 2",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 43.7477414146049

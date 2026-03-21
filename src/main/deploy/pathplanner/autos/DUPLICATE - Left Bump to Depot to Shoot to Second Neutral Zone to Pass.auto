@@ -7,31 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Left Neutral Zone Hairpin to Left Trench"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
+            "pathName": "Left Bump, Depot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Depot"
+            "pathName": "Depot to Shoot"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Shoot"
+            "pathName": "Left Shoot to Second Run Left"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Second Run Left to Right Neutral pile"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Left Trench",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

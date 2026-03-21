@@ -3,16 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.7,
-        "y": 1.0044777777777778
+        "x": 4.0,
+        "y": 0.58
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.700000000000001,
-        "y": 1.0044777777777778
+        "x": 5.0,
+        "y": 0.58
       },
       "isLocked": true,
-      "linkedName": "RightNeutralPile"
+      "linkedName": "Right Trench"
+    },
+    {
+      "anchor": {
+        "x": 7.7,
+        "y": 1.0239666666666654
+      },
+      "prevControl": {
+        "x": 7.397895606268,
+        "y": 0.9038967197016752
+      },
+      "nextControl": {
+        "x": 8.004242424242424,
+        "y": 1.1448863636363638
+      },
+      "isLocked": false,
+      "linkedName": "RightNeutralPileRight"
     },
     {
       "anchor": {
@@ -48,12 +64,12 @@
     },
     {
       "anchor": {
-        "x": 3.7290888888888887,
-        "y": 0.43929999999999947
+        "x": 4.0,
+        "y": 0.58
       },
       "prevControl": {
-        "x": 6.569375,
-        "y": 0.6131363636363643
+        "x": 6.840286111111112,
+        "y": 0.7538363636363647
       },
       "nextControl": null,
       "isLocked": false,
@@ -62,17 +78,37 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.0,
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 1.5,
       "rotationDegrees": -80.0
     },
     {
-      "waypointRelativePos": 2,
+      "waypointRelativePos": 2.0,
+      "rotationDegrees": -80.0
+    },
+    {
+      "waypointRelativePos": 3.0,
       "rotationDegrees": 70.0
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeNoTimeout",
+      "waypointRelativePos": 0.5823321554770308,
+      "endWaypointRelativePos": 3.8670076726342777,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeNoTimeout"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -89,7 +125,7 @@
   "folder": "Neutral Zone Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -81.24277198870448
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

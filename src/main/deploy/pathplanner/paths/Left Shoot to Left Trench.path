@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.4,
-        "y": 3.0
+        "x": 2.647,
+        "y": 5.185
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2455210387852684,
-        "y": 3.1965610605944565
+        "x": 3.0628125,
+        "y": 6.028181818181817
       },
       "isLocked": false,
-      "linkedName": "Right Shoot"
+      "linkedName": "LeftShoot"
     },
     {
       "anchor": {
-        "x": 1.4765719696969695,
-        "y": 3.636363636363636
+        "x": 4.0,
+        "y": 7.523068181818182
       },
       "prevControl": {
-        "x": 1.8253787878787877,
-        "y": 3.6529734848484843
+        "x": 3.0,
+        "y": 7.523068181818182
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Tower"
+      "linkedName": "Left Trench"
     }
   ],
   "rotationTargets": [],
@@ -45,10 +45,10 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Tower Paths",
+  "folder": "Stage 2",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 43.7477414146049
+    "rotation": 45.0
   },
   "useDefaultConstraints": true
 }

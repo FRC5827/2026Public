@@ -230,14 +230,20 @@ public class RobotContainer {
                 "Shoot",
                 Commands.deadline(
                                 Commands.parallel(
-                                        superstructure
-                                                .aimAndShoot()
-                                                .asProxy()
-                                                .withName("AimAndShoot"),
-                                        intakeDeployer
-                                                .liftDeployer()
-                                                .asProxy()
-                                                .withName("LiftDeployer")),
+                                                superstructure
+                                                        .aimAndShoot()
+                                                        .asProxy()
+                                                        .withName("AimAndShoot"),
+                                                intakeDeployer
+                                                        .liftDeployer()
+                                                        .asProxy()
+                                                        .withName("LiftDeployer"))
+                                        .beforeStarting(
+                                                hopperIndexer
+                                                        .runIndexerReverse()
+                                                        .asProxy()
+                                                        .withTimeout(0.25)
+                                                        .withName("RunIndexerReverse")),
                                 intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
                         .withTimeout(4.0)
                         .withName("NC_Shoot"));
@@ -247,29 +253,24 @@ public class RobotContainer {
                 superstructure
                         .aimAndShoot()
                         .asProxy()
-                        .withTimeout(5.0)
+                        .withTimeout(6.0)
                         .withName("NC_ShootNoIntake"));
 
-        // Intake command: run intake flywheel and deploy intake. Wrapped in a sequence to ensure
-        // deploy runs before flywheel
+        // Intake command: run intake flywheel and deploy intake.
         NamedCommands.registerCommand(
                 "Intake",
-                Commands.sequence(
+                Commands.parallel(
                                 intakeDeployer
                                         .deployDeployer()
                                         .asProxy()
                                         .withName("DeployDeployer"),
-                                // Because of the timeout, this command is meant for depot and
-                                // outpost
-                                intakeFlywheel
-                                        .runIntake()
-                                        .asProxy()
-                                        .withTimeout(2.0)
-                                        .withName("RunIntake"))
+                                // Because of the timeout, this command is meant for outpost
+                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
+                        .withTimeout(3.0)
                         .withName("NC_Intake"));
         NamedCommands.registerCommand(
                 "IntakeNoTimeout",
-                Commands.sequence(
+                Commands.parallel(
                                 intakeDeployer
                                         .deployDeployer()
                                         .asProxy()
@@ -394,7 +395,7 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // return Commands.parallel(intakeDeployer.liftDeployer(), new PathPlannerAuto("test"));
-        return autoChooser.get().withName("Auto_FullSequence");
+        return autoChooser.get();
         // return new PathPlannerAuto("Left Trench to Shoot to Depot");
     }
 

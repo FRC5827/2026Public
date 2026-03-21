@@ -17,35 +17,15 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "ShootNoIntake"
-                }
-              },
-              {
-                "type": "deadline",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Left Shoot to Depot"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "IntakeNoTimeout"
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
+            "pathName": "Left Shoot to Depot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
           }
         }
       ]

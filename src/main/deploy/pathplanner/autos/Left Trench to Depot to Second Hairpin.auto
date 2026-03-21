@@ -7,25 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Left Neutral Zone Hairpin to Left Trench"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
+            "pathName": "Left Trench to Depot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Depot"
+            "pathName": "Depot to Shoot"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Shoot"
+            "name": "ShootNoIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Shoot to Left Trench"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Trench to Left Neutral Zone Second Round Hairpin to Left Trench"
           }
         }
       ]

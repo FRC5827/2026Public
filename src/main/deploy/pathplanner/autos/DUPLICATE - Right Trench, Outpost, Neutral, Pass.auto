@@ -7,7 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Bump to Outpost"
+            "pathName": "Right Trench to Outpost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
           }
         },
         {
@@ -31,19 +37,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Shoot to Tower"
+            "pathName": "Right Shoot to Second Run Neutral Pile Right"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Climb"
+            "pathName": "Second Run Right to Left Neutral Zone"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Right Bump",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

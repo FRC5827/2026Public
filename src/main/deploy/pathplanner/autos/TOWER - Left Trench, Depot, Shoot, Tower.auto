@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Bump to Left Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Shoot to Depot"
+            "pathName": "Left Trench to Depot"
           }
         },
         {
@@ -56,6 +44,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left Bump",
+  "folder": "Bad Autos",
   "choreoAuto": false
 }

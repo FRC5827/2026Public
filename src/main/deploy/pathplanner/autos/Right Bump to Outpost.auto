@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Bump, Depot"
+            "pathName": "Right Bump to Outpost"
           }
         },
         {
@@ -20,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left Bump",
+  "folder": "Right Bump",
   "choreoAuto": false
 }

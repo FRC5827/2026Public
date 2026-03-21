@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trench to Right Shoot"
+            "pathName": "Right Trench to Right Neutral Zone Hairpin to Right Trench"
           }
         },
         {
@@ -19,19 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Shoot to Neutral Pile"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Neutral Pile to Shoot"
+            "pathName": "Right Trench to Outpost"
           }
         },
         {

@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trench to Depot"
+            "pathName": "Right Trench to Right Neutral Zone Hairpin to Right Trench"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Intake"
+            "name": "Shoot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Depot to Shoot"
+            "pathName": "Right Trench to Right Neutral Zone Second Round Hairpin to Right Trench"
           }
         },
         {
@@ -32,6 +32,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left Trench",
+  "folder": "Right Trench",
   "choreoAuto": false
 }

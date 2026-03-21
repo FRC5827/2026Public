@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.4,
-        "y": 3.0
+        "x": 3.6,
+        "y": 5.4
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2455210387852684,
-        "y": 3.1965610605944565
+        "x": 1.7658806818181818,
+        "y": 5.49965909090909
       },
       "isLocked": false,
-      "linkedName": "Right Shoot"
+      "linkedName": "LeftBump"
     },
     {
       "anchor": {
-        "x": 1.4765719696969695,
-        "y": 3.636363636363636
+        "x": 0.942177777777778,
+        "y": 7.504022222222222
       },
       "prevControl": {
-        "x": 1.8253787878787877,
-        "y": 3.6529734848484843
+        "x": 1.3709333333333333,
+        "y": 7.465044444444444
+      },
+      "nextControl": {
+        "x": 0.5158452116253047,
+        "y": 7.542779728236083
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.47444444444444445,
+        "y": 5.6
+      },
+      "prevControl": {
+        "x": 0.5426555555555554,
+        "y": 6.399044444444445
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Tower"
+      "linkedName": "Depot"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
-  "folder": "Tower Paths",
+  "folder": "Random Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 43.7477414146049
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

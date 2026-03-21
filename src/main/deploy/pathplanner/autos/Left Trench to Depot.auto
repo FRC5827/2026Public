@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Bump, Depot"
+            "pathName": "Left Trench to Depot"
           }
         },
         {
@@ -20,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left Bump",
+  "folder": "Left Trench",
   "choreoAuto": false
 }
