@@ -49,7 +49,8 @@ public class Deployer extends SubsystemBase {
     static final LoggedTunableNumber DEPLOYER_DEPLOY_ANGLE_RAD =
             new LoggedTunableNumber(
                     "Intake/Deployer/DeployPosition", Units.rotationsToRadians(-0.621338));
-    static final LoggedTunableNumber FEEDFORWARD_ANGLE_OFFSET = new LoggedTunableNumber("Intake/Deployer/FF Offset", 1.947);
+    static final LoggedTunableNumber FEEDFORWARD_ANGLE_OFFSET =
+            new LoggedTunableNumber("Intake/Deployer/FF Offset", 1.947);
     private final LoggedTunableNumber deployerVoltage =
             new LoggedTunableNumber("Intake/Deployer/Voltage", 2.0);
 
@@ -93,8 +94,10 @@ public class Deployer extends SubsystemBase {
                 "Intake/Deployer/Current Profile Position", profileCurrentState.position);
         Logger.recordOutput(
                 "Intake/Deployer/Current Profile Velocity", profileCurrentState.velocity);
-        
-        Logger.recordOutput("Intake/Deployer/Feedforward Offset Position", profileCurrentState.position + FEEDFORWARD_ANGLE_OFFSET.get());
+
+        Logger.recordOutput(
+                "Intake/Deployer/Feedforward Offset Position",
+                profileCurrentState.position + FEEDFORWARD_ANGLE_OFFSET.get());
 
         if (doMotionProfiling) {
             var profileNewState =
