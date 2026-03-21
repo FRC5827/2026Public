@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj.RobotBase;
  */
 public final class Constants {
     public static final Mode simMode = Mode.SIM;
-    public static final boolean tuningMode = false;
+    public static final boolean tuningMode = true;
     public static final boolean characterizationMode = false;
     public static final boolean fusionAutosEnabled = false;
 
