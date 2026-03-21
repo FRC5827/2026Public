@@ -49,7 +49,7 @@ public class Targeting extends SubsystemBase {
                     Rotation3d.kZero);
     // Multiplier to account for lack of acceleration under hood
     static final LoggedTunableNumber shooterMultiplier =
-            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.13);
+            new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.1);
 
     static final LoggedTunableNumber manualPitchPosition =
             new LoggedTunableNumber("Targeting/Manual/Pitch Position", 0.0);
