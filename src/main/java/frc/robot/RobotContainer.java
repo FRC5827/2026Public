@@ -230,9 +230,9 @@ public class RobotContainer {
                 "Shoot",
                 Commands.deadline(
                                 superstructure
-                                                        .aimAndShoot()
-                                                        .asProxy()
-                                                        .withName("AimAndShoot")
+                                        .aimAndShoot()
+                                        .asProxy()
+                                        .withName("AimAndShoot")
                                         .beforeStarting(
                                                 hopperIndexer
                                                         .runIndexerReverse()
@@ -241,16 +241,16 @@ public class RobotContainer {
                                                         .withName("RunIndexerReverse")),
                                 intakeFlywheel.runIntake().asProxy().withName("RunIntake"),
                                 Commands.repeatingSequence(
-                                                        intakeDeployer
-                                                                .liftDeployer()
-                                                                .asProxy()
-                                                                .withName("LiftDeployer")
-                                                                .withTimeout(0.8),
-                                                        intakeDeployer
-                                                                .deployDeployer()
-                                                                .asProxy()
-                                                                .withName("DeployDeployer")
-                                                                .withTimeout(0.2)))
+                                        intakeDeployer
+                                                .liftDeployer()
+                                                .asProxy()
+                                                .withName("LiftDeployer")
+                                                .withTimeout(0.7),
+                                        intakeDeployer
+                                                .deployDeployer()
+                                                .asProxy()
+                                                .withName("DeployDeployer")
+                                                .withTimeout(0.3)))
                         .withTimeout(4.0)
                         .withName("NC_Shoot"));
 
