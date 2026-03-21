@@ -229,12 +229,18 @@ public class RobotContainer {
         NamedCommands.registerCommand(
                 "Shoot",
                 Commands.deadline(
-                                Commands.deadline(
-                                                superstructure
+                                superstructure
                                                         .aimAndShoot()
                                                         .asProxy()
-                                                        .withName("AimAndShoot"),
-                                                Commands.repeatingSequence(
+                                                        .withName("AimAndShoot")
+                                        .beforeStarting(
+                                                hopperIndexer
+                                                        .runIndexerReverse()
+                                                        .asProxy()
+                                                        .withTimeout(0.25)
+                                                        .withName("RunIndexerReverse")),
+                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"),
+                                Commands.repeatingSequence(
                                                         intakeDeployer
                                                                 .liftDeployer()
                                                                 .asProxy()
@@ -245,13 +251,6 @@ public class RobotContainer {
                                                                 .asProxy()
                                                                 .withName("DeployDeployer")
                                                                 .withTimeout(0.2)))
-                                        .beforeStarting(
-                                                hopperIndexer
-                                                        .runIndexerReverse()
-                                                        .asProxy()
-                                                        .withTimeout(0.25)
-                                                        .withName("RunIndexerReverse")),
-                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
                         .withTimeout(4.0)
                         .withName("NC_Shoot"));
 
