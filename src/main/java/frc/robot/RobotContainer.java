@@ -245,12 +245,12 @@ public class RobotContainer {
                                                 .liftDeployer()
                                                 .asProxy()
                                                 .withName("LiftDeployer")
-                                                .withTimeout(0.7),
+                                                .withDeadline(Commands.waitSeconds(0.7)),
                                         intakeDeployer
                                                 .deployDeployer()
                                                 .asProxy()
                                                 .withName("DeployDeployer")
-                                                .withTimeout(0.3)))
+                                                .withDeadline(Commands.waitSeconds(0.3))))
                         .withTimeout(4.0)
                         .withName("NC_Shoot"));
 
