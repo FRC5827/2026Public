@@ -51,11 +51,14 @@ public class Targeting extends SubsystemBase {
     static final LoggedTunableNumber shooterMultiplier =
             new LoggedTunableNumber("Targeting/Shooter Multiplier", 2.13);
 
-    static final LoggedTunableNumber manualTargetPitchAngleRad =
-            new LoggedTunableNumber(
-                    "Targeting/Manual/Target Pitch Angle Radians", Units.degreesToRadians(45));
-    static final LoggedTunableNumber manualTargetDistanceMeters =
-            new LoggedTunableNumber("Targeting/Manual/Target Distance Meters", 1.0);
+    static final LoggedTunableNumber manualPitchPosition =
+            new LoggedTunableNumber("Targeting/Manual/Pitch Position", 0.0);
+
+    static final LoggedTunableNumber manualShooterVelocity =
+            new LoggedTunableNumber("Targeting/Manual/Shooter Velocity", 1.0);
+
+    static final LoggedTunableNumber manualYawPosition =
+            new LoggedTunableNumber("Targeting/Manual/Yaw Position", 0.0);
 
     static final LoggedTunableNumber distanceFromCornerToCornerShot =
             new LoggedTunableNumber("Targeting/Distance From Corner To Corner Shot", 0.5);
@@ -109,10 +112,13 @@ public class Targeting extends SubsystemBase {
 
     public void setTargetManual() {
         clearTarget();
-        this.pitchAngle = manualTargetPitchAngleRad.get();
-        this.shooterVelocity =
-                solveForVelocityWithAngle(pitchAngle, manualTargetDistanceMeters.get(), 0);
-        this.yawPosition = 0.0;
+        this.pitchAngle =
+                MathUtil.interpolate(
+                        Turret.pitchMinAngleRad.get(),
+                        Turret.pitchMaxAngleRad.get(),
+                        1.0 - manualPitchPosition.get());
+        this.shooterVelocity = manualShooterVelocity.get();
+        this.yawPosition = manualYawPosition.get();
         this.yawVelocity = 0.0;
         this.canAimAtTarget = true;
     }

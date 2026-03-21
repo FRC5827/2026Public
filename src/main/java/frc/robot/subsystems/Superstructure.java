@@ -91,31 +91,20 @@ public final class Superstructure extends SubsystemBase {
 
     public Command aim() {
         // TODO: if we add a hood, the code to lower said hood should be added here
-        return (Commands.either(
-                aimAtHub(),
-                aimAtCorner(),
-                () ->
-                        FieldUtil.isInCurrentAllianceZone(
-                                drive::getPose, DriverStation.getAlliance())));
-    }
-
-    public Command aimAtHub() {
-        return targeting
-                .runEnd(
+        return Commands.runEnd(
                         () -> {
-                            targeting.setTarget(
-                                    AllianceFlipUtil.shouldFlip()
-                                            ? FieldConstants.Hub.oppInnerCenterPoint
-                                            : FieldConstants.Hub.innerCenterPoint,
-                                    new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
+                            if (FieldUtil.isInCurrentAllianceZone(
+                                    drive::getPose, DriverStation.getAlliance())) {
+                                targeting.setTarget(
+                                        AllianceFlipUtil.shouldFlip()
+                                                ? FieldConstants.Hub.oppInnerCenterPoint
+                                                : FieldConstants.Hub.innerCenterPoint,
+                                        new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
+                            } else {
+                                targeting.aimAtCorner();
+                            }
                         },
                         () -> targeting.clearTarget())
-                .alongWith(turret.aimAtTarget());
-    }
-
-    public Command aimAtCorner() {
-        return targeting
-                .runEnd(() -> targeting.aimAtCorner(), () -> targeting.clearTarget())
                 .alongWith(turret.aimAtTarget());
     }
 
