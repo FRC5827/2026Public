@@ -114,7 +114,7 @@ public final class Superstructure extends SubsystemBase {
                                 isShootingAtTarget()
                                         && (GameTimeUtil.isHubActive(
                                                         DriverStation.getMatchTime()
-                                                                - targeting.getAirTimeToTarget())
+                                                                - 2.0)
                                                 || overrideTimeRestrictions.get()))
                 .andThen(Commands.parallel(kicker.runKicker(), indexer.runIndexer()));
     }
