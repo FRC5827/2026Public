@@ -60,17 +60,17 @@ public class GameTimeUtil {
         } else if (time > 105) {
             // Shift 1
             return shift1Active;
-        } else if (time > 105-BUFFER_TIME) {
+        } else if (time > 105 - BUFFER_TIME) {
             return true;
         } else if (time > 80) {
             // Shift 2
             return !shift1Active;
-        } else if (time > 80-BUFFER_TIME) {
-          return true;  
+        } else if (time > 80 - BUFFER_TIME) {
+            return true;
         } else if (time > 55) {
             // Shift 3
             return shift1Active;
-        } else if (time > 55-BUFFER_TIME) {
+        } else if (time > 55 - BUFFER_TIME) {
             return true;
         } else if (time > 30) {
             // Shift 4
