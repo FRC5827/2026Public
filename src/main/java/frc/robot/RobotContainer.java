@@ -413,12 +413,12 @@ public class RobotContainer {
         boolean isCurrentlyAligned = FieldUtil.isTrenchAligned(drive::getPose);
 
         // Only rumble when newly aligned (transition from not aligned to aligned)
-        if (isCurrentlyAligned && !wasPreviouslyAligned) {
+        /*if (isCurrentlyAligned && !wasPreviouslyAligned) {
             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.2);
         } else if (!isCurrentlyAligned && wasPreviouslyAligned) {
             // Stop rumble when no longer aligned
             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
-        }
+        }*/
 
         /*if (isCurrentlyAligned) {
             targeting.clearTarget();
