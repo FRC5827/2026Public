@@ -118,7 +118,11 @@ public final class Superstructure extends SubsystemBase {
                         () ->
                                 isShootingAtTarget()
                                         && (GameTimeUtil.isHubActive(
-                                                        DriverStation.getMatchTime() - 2.0)
+                                                        GameTimeUtil.getEstimatedMatchTime()
+                                                                - targeting.getAirTimeToTarget()
+                                                                - 0.75)
+                                                // 0.75 -> 0.5 for indexer/kicker delay, 0.25 for
+                                                // hub scoring delay
                                                 || overrideTimeRestrictions.get()))
                 .andThen(Commands.parallel(kicker.runKicker(), indexer.runIndexer()));
     }
