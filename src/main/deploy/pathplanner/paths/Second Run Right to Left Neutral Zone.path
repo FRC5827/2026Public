@@ -47,7 +47,19 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeNoTimeout",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": 2,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeNoTimeout"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,

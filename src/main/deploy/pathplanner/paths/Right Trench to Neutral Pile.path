@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.7290888888888887,
-        "y": 0.43929999999999947
+        "x": 4.0,
+        "y": 0.58
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.729088888888889,
-        "y": 0.43929999999999936
+        "x": 5.0,
+        "y": 0.5799999999999998
       },
       "isLocked": false,
       "linkedName": "Right Trench"
@@ -53,7 +53,7 @@
   "folder": "Stage 0",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

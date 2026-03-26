@@ -449,9 +449,10 @@ public class AutoChooser extends SubsystemBase {
                                 String selectedAuto3 = autoChooser3.get();
                                 auto =
                                         Commands.waitSeconds(delay)
-                                                .andThen(new PathPlannerAuto(selectedAuto1))
-                                                .andThen(new PathPlannerAuto(selectedAuto2))
-                                                .andThen(new PathPlannerAuto(selectedAuto3));
+                                                .andThen(
+                                                        new PathPlannerAuto(selectedAuto1),
+                                                        new PathPlannerAuto(selectedAuto2),
+                                                        new PathPlannerAuto(selectedAuto3));
                             } else {
                                 // NOTE: FUSION AUTOS ARE DISABLED — 2nd and 3rd autos are ignored.
                                 // Set Constants.fusionAutosEnabled = true to re-enable fusion.
@@ -478,7 +479,6 @@ public class AutoChooser extends SubsystemBase {
                             e.printStackTrace();
                             auto = Commands.none();
                         }
-                        auto = auto.withName(autoName);
                     }
                 }
             }

@@ -76,6 +76,11 @@ public final class Superstructure extends SubsystemBase {
         Logger.recordOutput(
                 "PerformanceMonitor/Superstructure", (Timer.getFPGATimestamp() - startTime) * 1000);
 
+        // Update match time
+        GameTimeUtil.updateMatchTime();
+        Logger.recordOutput(
+                "GameTimeUtil/Estimated Match Time", GameTimeUtil.getEstimatedMatchTime());
+
         // Update Field2d
         field2d.setRobotPose(drive.getPose());
         if (targeting.hasTarget()) {
@@ -91,31 +96,20 @@ public final class Superstructure extends SubsystemBase {
 
     public Command aim() {
         // TODO: if we add a hood, the code to lower said hood should be added here
-        return (Commands.either(
-                aimAtHub(),
-                aimAtCorner(),
-                () ->
-                        FieldUtil.isInCurrentAllianceZone(
-                                drive::getPose, DriverStation.getAlliance())));
-    }
-
-    public Command aimAtHub() {
-        return targeting
-                .runEnd(
+        return Commands.runEnd(
                         () -> {
-                            targeting.setTarget(
-                                    AllianceFlipUtil.shouldFlip()
-                                            ? FieldConstants.Hub.oppInnerCenterPoint
-                                            : FieldConstants.Hub.innerCenterPoint,
-                                    new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
+                            if (FieldUtil.isInCurrentAllianceZone(
+                                    drive::getPose, DriverStation.getAlliance())) {
+                                targeting.setTarget(
+                                        AllianceFlipUtil.shouldFlip()
+                                                ? FieldConstants.Hub.oppInnerCenterPoint
+                                                : FieldConstants.Hub.innerCenterPoint,
+                                        new Translation2d(hubEdgeDX.get(), hubEdgeDY.get()));
+                            } else {
+                                targeting.aimAtCorner();
+                            }
                         },
                         () -> targeting.clearTarget())
-                .alongWith(turret.aimAtTarget());
-    }
-
-    public Command aimAtCorner() {
-        return targeting
-                .runEnd(() -> targeting.aimAtCorner(), () -> targeting.clearTarget())
                 .alongWith(turret.aimAtTarget());
     }
 
@@ -124,8 +118,11 @@ public final class Superstructure extends SubsystemBase {
                         () ->
                                 isShootingAtTarget()
                                         && (GameTimeUtil.isHubActive(
-                                                        targeting.getAirTimeToTarget()
-                                                                + DriverStation.getMatchTime())
+                                                        GameTimeUtil.getEstimatedMatchTime()
+                                                                - targeting.getAirTimeToTarget()
+                                                                - 0.75)
+                                                // 0.75 -> 0.5 for indexer/kicker delay, 0.25 for
+                                                // hub scoring delay
                                                 || overrideTimeRestrictions.get()))
                 .andThen(Commands.parallel(kicker.runKicker(), indexer.runIndexer()));
     }

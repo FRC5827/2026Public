@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
@@ -228,16 +229,28 @@ public class RobotContainer {
         NamedCommands.registerCommand(
                 "Shoot",
                 Commands.deadline(
-                                Commands.parallel(
-                                        superstructure
-                                                .aimAndShoot()
-                                                .asProxy()
-                                                .withName("AimAndShoot"),
+                                superstructure
+                                        .aimAndShoot()
+                                        .asProxy()
+                                        .withName("AimAndShoot")
+                                        .beforeStarting(
+                                                hopperIndexer
+                                                        .runIndexerReverse()
+                                                        .asProxy()
+                                                        .withTimeout(0.25)
+                                                        .withName("RunIndexerReverse")),
+                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"),
+                                Commands.repeatingSequence(
                                         intakeDeployer
                                                 .liftDeployer()
                                                 .asProxy()
-                                                .withName("LiftDeployer")),
-                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
+                                                .withName("LiftDeployer")
+                                                .withDeadline(Commands.waitSeconds(0.9)),
+                                        intakeDeployer
+                                                .deployDeployer()
+                                                .asProxy()
+                                                .withName("DeployDeployer")
+                                                .withDeadline(Commands.waitSeconds(0.1))))
                         .withTimeout(4.0)
                         .withName("NC_Shoot"));
 
@@ -246,29 +259,24 @@ public class RobotContainer {
                 superstructure
                         .aimAndShoot()
                         .asProxy()
-                        .withTimeout(5.0)
+                        .withTimeout(6.0)
                         .withName("NC_ShootNoIntake"));
 
-        // Intake command: run intake flywheel and deploy intake. Wrapped in a sequence to ensure
-        // deploy runs before flywheel
+        // Intake command: run intake flywheel and deploy intake.
         NamedCommands.registerCommand(
                 "Intake",
-                Commands.sequence(
+                Commands.parallel(
                                 intakeDeployer
                                         .deployDeployer()
                                         .asProxy()
                                         .withName("DeployDeployer"),
-                                // Because of the timeout, this command is meant for depot and
-                                // outpost
-                                intakeFlywheel
-                                        .runIntake()
-                                        .asProxy()
-                                        .withTimeout(2.0)
-                                        .withName("RunIntake"))
+                                // Because of the timeout, this command is meant for outpost
+                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
+                        .withTimeout(3.0)
                         .withName("NC_Intake"));
         NamedCommands.registerCommand(
                 "IntakeNoTimeout",
-                Commands.sequence(
+                Commands.parallel(
                                 intakeDeployer
                                         .deployDeployer()
                                         .asProxy()
@@ -342,7 +350,11 @@ public class RobotContainer {
         turret.setDefaultCommand(superstructure.aim().withName("Turret_Aim_Default"));
         controller
                 .rightTrigger()
-                .whileTrue(superstructure.aimAndShoot().withName("Superstructure_AimAndShoot_RT"))
+                .whileTrue(
+                        superstructure
+                                .aimAndShoot()
+                                .withName("Superstructure_AimAndShoot_RT")
+                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming))
                 .onTrue(DriveCommands.setSlowMode(true).withName("Set_Slow_Mode"))
                 .onFalse(DriveCommands.setSlowMode(false).withName("Set_Slow_Mode"));
 
@@ -363,22 +375,22 @@ public class RobotContainer {
         /*controller
         .rightStick()
         .whileTrue(
-                Commands.run(() -> targeting.setTargetManual())
+                Commands.runEnd(
+                                () -> targeting.setTargetManual(),
+                                () -> targeting.clearTarget())
                         .withName("Targeting_SetManual")
                         .alongWith(
                                 turret.aimAtTarget()
                                         .withName("Turret_AimAtTarget_RS")
                                         .alongWith(
-                                                superstructure
-                                                        .shootAtTarget()
+                                                shooter.shootAtTarget()
                                                         .withName(
-                                                                "Superstructure_ShootAtTarget_RS"))
+                                                                "Shooter_ShootAtTarget_RS"))
                                         .alongWith(
                                                 superstructure
                                                         .runKickerAndIndexer()
                                                         .withName(
                                                                 "Superstructure_RunKickerAndIndexer_RS")))
-                        .finallyDo(() -> targeting.clearTarget())
                         .withName("ManualShootTest_RightStick"));*/
     }
 
@@ -389,7 +401,7 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // return Commands.parallel(intakeDeployer.liftDeployer(), new PathPlannerAuto("test"));
-        return autoChooser.get().withName("Auto_FullSequence");
+        return autoChooser.get();
         // return new PathPlannerAuto("Left Trench to Shoot to Depot");
     }
 
@@ -401,12 +413,12 @@ public class RobotContainer {
         boolean isCurrentlyAligned = FieldUtil.isTrenchAligned(drive::getPose);
 
         // Only rumble when newly aligned (transition from not aligned to aligned)
-        if (isCurrentlyAligned && !wasPreviouslyAligned) {
+        /*if (isCurrentlyAligned && !wasPreviouslyAligned) {
             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.2);
         } else if (!isCurrentlyAligned && wasPreviouslyAligned) {
             // Stop rumble when no longer aligned
             controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, 0.0);
-        }
+        }*/
 
         /*if (isCurrentlyAligned) {
             targeting.clearTarget();
