@@ -245,7 +245,7 @@ public class RobotContainer {
                                                 .liftDeployer()
                                                 .asProxy()
                                                 .withName("LiftDeployer")
-                                                .withDeadline(Commands.waitSeconds(0.9)),
+                                                .withDeadline(Commands.waitSeconds(0.6)),
                                         intakeDeployer
                                                 .deployDeployer()
                                                 .asProxy()
@@ -253,6 +253,33 @@ public class RobotContainer {
                                                 .withDeadline(Commands.waitSeconds(0.1))))
                         .withTimeout(4.0)
                         .withName("NC_Shoot"));
+        NamedCommands.registerCommand(
+                "FastShoot",
+                Commands.deadline(
+                                superstructure
+                                        .aimAndShoot()
+                                        .asProxy()
+                                        .withName("AimAndShoot")
+                                        .beforeStarting(
+                                                hopperIndexer
+                                                        .runIndexerReverse()
+                                                        .asProxy()
+                                                        .withTimeout(0.25)
+                                                        .withName("RunIndexerReverse")),
+                                intakeFlywheel.runIntake().asProxy().withName("RunIntake"),
+                                Commands.repeatingSequence(
+                                        intakeDeployer
+                                                .liftDeployer()
+                                                .asProxy()
+                                                .withName("LiftDeployer")
+                                                .withDeadline(Commands.waitSeconds(0.6)),
+                                        intakeDeployer
+                                                .deployDeployer()
+                                                .asProxy()
+                                                .withName("DeployDeployer")
+                                                .withDeadline(Commands.waitSeconds(0.1))))
+                        .withTimeout(2.75)
+                        .withName("NC_FastShoot"));
 
         NamedCommands.registerCommand(
                 "ShootNoIntake",
