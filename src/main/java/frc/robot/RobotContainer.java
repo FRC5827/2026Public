@@ -399,7 +399,7 @@ public class RobotContainer {
                 .onTrue(intakeDeployer.liftDeployer().withName("Deployer_Retract_PovDown_OnTrue"));
 
         // temporary testing command for tuning shooter
-        /*controller
+        controller
         .rightStick()
         .whileTrue(
                 Commands.runEnd(
@@ -418,7 +418,7 @@ public class RobotContainer {
                                                         .runKickerAndIndexer()
                                                         .withName(
                                                                 "Superstructure_RunKickerAndIndexer_RS")))
-                        .withName("ManualShootTest_RightStick"));*/
+                        .withName("ManualShootTest_RightStick"));
     }
 
     /**
