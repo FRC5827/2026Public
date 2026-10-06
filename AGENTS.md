@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-FRC 9317 robot code for the 2026 season. Java-based, built on WPILib with AdvantageKit logging and CTRE Phoenix 6 hardware.
+FRC 5827 robot code for the 2026 season. Java-based, built on WPILib with AdvantageKit logging and CTRE Phoenix 6 hardware.
 
 ## Building
 
@@ -70,7 +70,7 @@ python tools/pull_logs.py --all        # re-download everything
 python tools/pull_logs.py --no-cleanup # skip USB cleanup
 ```
 
-Requires SSH access to the roboRIO (team 9317). Searches multiple addresses automatically.
+Requires SSH access to the roboRIO (team 5827). Searches multiple addresses automatically.
 
 ### `tools/parse_dslog.py`
 Parses binary Driver Station `.dslog` v4 files and reports overrun analysis, CPU/CAN stats, trip time distributions, and worst-case timing.

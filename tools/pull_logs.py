@@ -31,7 +31,7 @@ import shutil
 from datetime import datetime, timedelta, timezone
 
 # ---- Configuration ----
-TEAM_NUMBER = 9317
+TEAM_NUMBER = 5827
 ROBORIO_USER = "lvuser"
 ROBORIO_HOSTS = [
     f"10.{TEAM_NUMBER // 100}.{TEAM_NUMBER % 100}.2",
