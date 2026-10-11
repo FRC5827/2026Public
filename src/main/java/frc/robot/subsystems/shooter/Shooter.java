@@ -90,7 +90,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public boolean isShooterAtVelocity() {
-        return targeting.canAimAtTarget()
+        return (targeting.canAimAtTarget() || targeting.isPassing())
                 && MathUtil.isNear(
                         targeting.getShooterVelocity(),
                         inputs.shooterMotorVelocityMPS,

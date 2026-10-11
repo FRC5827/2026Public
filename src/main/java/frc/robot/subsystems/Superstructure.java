@@ -117,7 +117,9 @@ public final class Superstructure extends SubsystemBase {
         return Commands.waitUntil(
                         () ->
                                 isShootingAtTarget()
-                                        && (GameTimeUtil.isHubActive(
+                                        && (targeting.isPassing()
+                                                // passing works regardless of hub state
+                                                || GameTimeUtil.isHubActive(
                                                         GameTimeUtil.getEstimatedMatchTime()
                                                                 - targeting.getAirTimeToTarget()
                                                                 - 0.75)
@@ -132,7 +134,8 @@ public final class Superstructure extends SubsystemBase {
     }
 
     public boolean isShootingAtTarget() {
-        return targeting.canAimAtTarget()
+        return targeting.hasTarget()
+                && (targeting.isPassing() || targeting.canAimAtTarget())
                 && turret.isAimingAtTarget()
                 && shooter.isShooterAtVelocity();
     }
