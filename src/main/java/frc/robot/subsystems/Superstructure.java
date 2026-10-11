@@ -63,7 +63,7 @@ public final class Superstructure extends SubsystemBase {
         overrideTimeRestrictions.addDefaultOption("False", false);
         overrideTimeRestrictions.addOption("True", true);
 
-        SmartDashboard.putData("Field2d", field2d);
+        SmartDashboard.putData("Drive/Field2d", field2d);
     }
 
     @Override
