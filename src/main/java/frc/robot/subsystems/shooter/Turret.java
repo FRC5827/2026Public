@@ -161,8 +161,14 @@ public class Turret extends SubsystemBase {
     }
 
     public boolean isAimingAtTarget() {
+        // When passing, the target may be unreachable (e.g. too far), but the turret must still be
+        // physically pointing at it so we never fire in the wrong direction
+        boolean yawInRange =
+                targeting.getYawPosition() >= yawMinRotations.get()
+                        && targeting.getYawPosition() <= yawMaxRotations.get();
         return yawZeroed
-                && targeting.canAimAtTarget()
+                && (targeting.canAimAtTarget() || targeting.isPassing())
+                && yawInRange
                 && MathUtil.isNear(
                         targeting.getYawPosition(),
                         inputs.yawTurretPositionRotations,

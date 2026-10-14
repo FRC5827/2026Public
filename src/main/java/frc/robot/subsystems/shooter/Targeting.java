@@ -14,7 +14,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.FieldConstants;
@@ -23,7 +22,6 @@ import frc.robot.util.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.function.Supplier;
 
@@ -63,9 +61,6 @@ public class Targeting extends SubsystemBase {
     static final LoggedTunableNumber distanceFromCornerToCornerShot =
             new LoggedTunableNumber("Targeting/Distance From Corner To Corner Shot", 0.5);
 
-    public static LoggedDashboardChooser<Boolean>
-            targetCornerIsLeftCorner; // Depot corner, Outpost Corner
-
     private final Supplier<Pose2d> robotPoseSupplier;
 
     // --- Target (null = no active target) ---
@@ -83,6 +78,7 @@ public class Targeting extends SubsystemBase {
     private double yawPosition = 0.0;
     private double yawVelocity = 0.0;
     private boolean canAimAtTarget = false;
+    private boolean passing = false;
     private double airTimeToTarget = 0.0;
 
     public Targeting(Supplier<Pose2d> robotPoseSupplier) {
@@ -92,11 +88,6 @@ public class Targeting extends SubsystemBase {
         this.xFilter = LinearFilter.singlePoleIIR(FILTER_TIME_CONSTANT, 0.02);
         this.yFilter = LinearFilter.singlePoleIIR(FILTER_TIME_CONSTANT, 0.02);
         this.rFilter = LinearFilter.singlePoleIIR(FILTER_TIME_CONSTANT, 0.02);
-
-        targetCornerIsLeftCorner =
-                new LoggedDashboardChooser<>("Chosen Corner For Passing", new SendableChooser<>());
-        targetCornerIsLeftCorner.addDefaultOption("Left Corner", true);
-        targetCornerIsLeftCorner.addOption("Right Corner", false);
     }
 
     /**
@@ -108,6 +99,7 @@ public class Targeting extends SubsystemBase {
     public void setTarget(Translation3d targetTranslation, Translation2d targetClearance) {
         this.targetTranslation = targetTranslation;
         this.targetClearance = targetClearance;
+        this.passing = false;
     }
 
     public void setTargetManual() {
@@ -134,6 +126,7 @@ public class Targeting extends SubsystemBase {
     public void clearTarget() {
         this.targetTranslation = null;
         this.targetClearance = null;
+        this.passing = false;
         this.canAimAtTarget = false;
         this.shooterVelocity = 0.0;
         this.airTimeToTarget = 0.0;
@@ -141,18 +134,24 @@ public class Targeting extends SubsystemBase {
 
     public void aimAtCorner() {
         double oneOverRoot2 = 1 / Math.sqrt(2); // For 45 degree angle to corner
+        Pose2d robotPose = robotPoseSupplier.get();
+
+        // Pick the nearest corner of our alliance side (compared in blue-alliance coordinates)
+        boolean isLeftCorner =
+                AllianceFlipUtil.apply(robotPose.getTranslation()).getY()
+                        >= FieldConstants.fieldWidth / 2.0;
+
         Translation3d targetTranslation =
                 new Translation3d(
                         distanceFromCornerToCornerShot.get() * oneOverRoot2,
-                        !targetCornerIsLeftCorner.get()
+                        !isLeftCorner
                                 ? distanceFromCornerToCornerShot.get() * oneOverRoot2
                                 : FieldConstants.fieldWidth
                                         - distanceFromCornerToCornerShot.get() * oneOverRoot2,
                         0);
 
         double distanceFromTrench;
-        Pose2d robotPose = robotPoseSupplier.get();
-        if (targetCornerIsLeftCorner.get()) {
+        if (isLeftCorner) {
             distanceFromTrench =
                     robotPose
                             .getTranslation()
@@ -174,6 +173,13 @@ public class Targeting extends SubsystemBase {
         targetTranslation = AllianceFlipUtil.apply(targetTranslation);
 
         setTarget(targetTranslation, new Translation2d(distanceFromTrench, 1.8));
+        this.passing = true;
+    }
+
+    /** Returns {@code true} if the active target is a pass (corner) rather than the hub. */
+    @AutoLogOutput(key = "Targeting/Is Passing")
+    public boolean isPassing() {
+        return passing;
     }
 
     /** Returns {@code true} if a target is currently set. */
@@ -320,6 +326,11 @@ public class Targeting extends SubsystemBase {
                 computedYawPosition >= Turret.yawMinRotations.get()
                         && computedYawPosition <= Turret.yawMaxRotations.get()
                         && computedVelocity != 0;
+
+        // When passing, if the target can't be hit, still shoot at full speed
+        if (passing && !canAimAtTarget) {
+            computedVelocity = Shooter.shooterMaxVelocity.get();
+        }
 
         pitchAngle = computedPitch;
         shooterVelocity = computedVelocity;
