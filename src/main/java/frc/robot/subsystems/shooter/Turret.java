@@ -44,11 +44,10 @@ public class Turret extends SubsystemBase {
     static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Turret/Yaw/kS", 0.08);
     static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Turret/Yaw/kV", 5.4);
 
+    static final LoggedTunableNumber yawZeroingEstimationCutoff = new LoggedTunableNumber("Turret/Yaw/Zeroing Cutoff", 0.5);
+
     @AutoLogOutput(key = "Turret/Yaw Zeroed")
     private boolean yawZeroed = false;
-
-    @AutoLogOutput(key = "Turret/Zero Step 1")
-    private boolean turretFlipped = false;
 
     private SimpleMotorFeedforward yawFeedforward =
             new SimpleMotorFeedforward(yawKS.get(), yawKV.get());
@@ -66,20 +65,13 @@ public class Turret extends SubsystemBase {
         Logger.processInputs("Turret", inputs);
 
         checkForPIDUpdates();
-        if (!turretFlipped) {
-            if (inputs.yawTurretPositionRotations < yawZeroingOffset.get() - 0.1) {
-                turretFlipped = true;
-            } else {
-                io.setYawVoltage(yawTurretFlipVoltage.get());
-            }
-        } else if (!yawZeroed) {
+
+        if (!yawZeroed) {
             if (inputs.yawLimitSwitchPressed) {
                 yawZeroed = true;
                 io.setYawVoltage(0);
                 io.zeroYaw(yawZeroingOffset.get());
-            } else if (inputs.yawTurretPositionRotations > 0) {
-                // If we pass zero again, assume limit switch failed
-                yawZeroed = true;
+            } else if (Math.abs(inputs.yawTurretPositionRotations) > yawZeroingEstimationCutoff.get()) {
                 io.setYawVoltage(0);
             } else {
                 io.setYawVoltage(yawZeroingVoltage.get());
