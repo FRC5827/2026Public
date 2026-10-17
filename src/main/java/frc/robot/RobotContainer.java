@@ -372,26 +372,26 @@ public class RobotContainer {
                 .onTrue(intakeDeployer.liftDeployer().withName("Deployer_Retract_PovDown_OnTrue"));
 
         // temporary testing command for tuning shooter
-        /*controller
-        .rightStick()
-        .whileTrue(
-                Commands.runEnd(
-                                () -> targeting.setTargetManual(),
-                                () -> targeting.clearTarget())
-                        .withName("Targeting_SetManual")
+        controller
+                .rightStick()
+                .whileTrue(
+                        Commands.runEnd(
+                                        () -> targeting.setTargetManual(),
+                                        () -> targeting.clearTarget())
+                                .withName("Targeting_SetManual"));
+        /* .alongWith(
+                turret.aimAtTarget()
+                        .withName("Turret_AimAtTarget_RS")
                         .alongWith(
-                                turret.aimAtTarget()
-                                        .withName("Turret_AimAtTarget_RS")
-                                        .alongWith(
-                                                shooter.shootAtTarget()
-                                                        .withName(
-                                                                "Shooter_ShootAtTarget_RS"))
-                                        .alongWith(
-                                                superstructure
-                                                        .runKickerAndIndexer()
-                                                        .withName(
-                                                                "Superstructure_RunKickerAndIndexer_RS")))
-                        .withName("ManualShootTest_RightStick"));*/
+                                shooter.shootAtTarget()
+                                        .withName(
+                                                "Shooter_ShootAtTarget_RS"))
+                        .alongWith(
+                                superstructure
+                                        .runKickerAndIndexer()
+                                        .withName(
+                                                "Superstructure_RunKickerAndIndexer_RS")))
+        .withName("ManualShootTest_RightStick"));*/
     }
 
     /**
