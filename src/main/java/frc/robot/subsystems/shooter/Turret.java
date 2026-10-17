@@ -28,7 +28,7 @@ public class Turret extends SubsystemBase {
     private static final LoggedTunableNumber yawTurretFlipVoltage =
             new LoggedTunableNumber("Turret/Yaw/Turret Flip Voltage", -2.0);
     private static final LoggedTunableNumber yawZeroingVoltage =
-            new LoggedTunableNumber("Turret/Yaw/Zeroing Voltage", 0.4);
+            new LoggedTunableNumber("Turret/Yaw/Zeroing Voltage", -0.4);
     private static final LoggedTunableNumber yawOpenLoopVoltage =
             new LoggedTunableNumber("Turret/Yaw/Open Loop Voltage", 1.0);
     private static final LoggedTunableNumber yawTolerance =
@@ -44,7 +44,8 @@ public class Turret extends SubsystemBase {
     static final LoggedTunableNumber yawKS = new LoggedTunableNumber("Turret/Yaw/kS", 0.08);
     static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Turret/Yaw/kV", 5.4);
 
-    static final LoggedTunableNumber yawZeroingEstimationCutoff = new LoggedTunableNumber("Turret/Yaw/Zeroing Cutoff", 0.5);
+    static final LoggedTunableNumber yawZeroingEstimationCutoff =
+            new LoggedTunableNumber("Turret/Yaw/Zeroing Cutoff", 0.5);
 
     @AutoLogOutput(key = "Turret/Yaw Zeroed")
     private boolean yawZeroed = false;
@@ -71,7 +72,8 @@ public class Turret extends SubsystemBase {
                 yawZeroed = true;
                 io.setYawVoltage(0);
                 io.zeroYaw(yawZeroingOffset.get());
-            } else if (Math.abs(inputs.yawTurretPositionRotations) > yawZeroingEstimationCutoff.get()) {
+            } else if (Math.abs(inputs.yawTurretPositionRotations)
+                    > yawZeroingEstimationCutoff.get()) {
                 io.setYawVoltage(0);
             } else {
                 io.setYawVoltage(yawZeroingVoltage.get());
