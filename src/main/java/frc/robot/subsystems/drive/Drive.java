@@ -21,6 +21,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -235,6 +236,20 @@ public class Drive extends SubsystemBase {
 
             // Apply update
             poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+
+            Pose2d currentPose = poseEstimator.getEstimatedPosition();
+            Pose2d poseClamped =
+                    new Pose2d(
+                            new Translation2d(
+                                    MathUtil.clamp(
+                                            currentPose.getX(), 0, FieldConstants.fieldLength),
+                                    MathUtil.clamp(
+                                            currentPose.getY(), 0, FieldConstants.fieldWidth)),
+                            currentPose.getRotation());
+            if (currentPose.getX() != poseClamped.getX()
+                    || currentPose.getY() != poseClamped.getY()) {
+                poseEstimator.resetPosition(rawGyroRotation, modulePositions, poseClamped);
+            }
         }
         long odometryEnd = RobotController.getFPGATime();
 
