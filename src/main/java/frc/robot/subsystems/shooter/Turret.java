@@ -26,9 +26,9 @@ public class Turret extends SubsystemBase {
             new LoggedTunableNumber("Turret/Pitch/Max Angle Radians", 1.372);
 
     private static final LoggedTunableNumber yawTurretFlipVoltage =
-            new LoggedTunableNumber("Turret/Yaw/Turret Flip Voltage", -4.0);
+            new LoggedTunableNumber("Turret/Yaw/Turret Flip Voltage", -2.0);
     private static final LoggedTunableNumber yawZeroingVoltage =
-            new LoggedTunableNumber("Turret/Yaw/Zeroing Voltage", 0.67);
+            new LoggedTunableNumber("Turret/Yaw/Zeroing Voltage", 0.2);
     private static final LoggedTunableNumber yawOpenLoopVoltage =
             new LoggedTunableNumber("Turret/Yaw/Open Loop Voltage", 1.0);
     private static final LoggedTunableNumber yawTolerance =
