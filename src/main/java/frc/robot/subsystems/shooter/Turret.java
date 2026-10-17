@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -10,6 +11,7 @@ import frc.robot.util.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class Turret extends SubsystemBase {
     static final double YAW_GEAR_RATIO = 48.0; // sensor to mechanism ratio
@@ -45,7 +47,11 @@ public class Turret extends SubsystemBase {
     static final LoggedTunableNumber yawKV = new LoggedTunableNumber("Turret/Yaw/kV", 5.4);
 
     static final LoggedTunableNumber yawZeroingEstimationCutoff =
-            new LoggedTunableNumber("Turret/Yaw/Zeroing Cutoff", 0.5);
+            new LoggedTunableNumber("Turret/Yaw/Zeroing Cutoff", 0.25);
+
+    static final LoggedTunableNumber overrideZeroingShooterRotatations =
+            new LoggedTunableNumber("Turret/Override Zeroing Rotations", -0.25);
+    public static LoggedDashboardChooser<Boolean> overrideZeroingShooter;
 
     @AutoLogOutput(key = "Turret/Yaw Zeroed")
     private boolean yawZeroed = false;
@@ -57,6 +63,11 @@ public class Turret extends SubsystemBase {
         this.io = io;
         this.inputs = new TurretIOInputsAutoLogged();
         this.targeting = targeting;
+
+        overrideZeroingShooter =
+                new LoggedDashboardChooser<>("Override Time Restrictions", new SendableChooser<>());
+        overrideZeroingShooter.addDefaultOption("False", false);
+        overrideZeroingShooter.addOption("True", true);
     }
 
     @Override
@@ -66,6 +77,12 @@ public class Turret extends SubsystemBase {
         Logger.processInputs("Turret", inputs);
 
         checkForPIDUpdates();
+
+        if (!yawZeroed && overrideZeroingShooter.get()) {
+            yawZeroed = true;
+            io.setYawVoltage(0);
+            io.zeroYaw(overrideZeroingShooterRotatations.get());
+        }
 
         if (!yawZeroed) {
             if (inputs.yawLimitSwitchPressed) {
