@@ -45,10 +45,10 @@ public class Deployer extends SubsystemBase {
     // target points, 0 is always horizontal by convention
     static final LoggedTunableNumber DEPLOYER_RETRACT_ANGLE_RAD =
             new LoggedTunableNumber(
-                    "Intake/Deployer/RetractPosition", Units.rotationsToRadians(-0.295654));
+                    "Intake/Deployer/RetractPosition", Units.rotationsToRadians(-0.472412));
     static final LoggedTunableNumber DEPLOYER_DEPLOY_ANGLE_RAD =
             new LoggedTunableNumber(
-                    "Intake/Deployer/DeployPosition", Units.rotationsToRadians(-0.621338));
+                    "Intake/Deployer/DeployPosition", Units.rotationsToRadians(-0.798096));
     static final LoggedTunableNumber FEEDFORWARD_ANGLE_OFFSET =
             new LoggedTunableNumber("Intake/Deployer/FF Offset", 0.376);
     private final LoggedTunableNumber deployerVoltage =
