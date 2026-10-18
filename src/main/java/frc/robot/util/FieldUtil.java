@@ -1,6 +1,8 @@
 package frc.robot.util;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 import frc.robot.Constants;
@@ -76,5 +78,22 @@ public class FieldUtil {
                 (isAlignedWithLeftTrench || isAlignedWithRightTrench) && !isNearDriverStations;
 
         return isTrenchAligned;
+    }
+
+    /*
+     * Returns a Pose2d for the position with it's position inside of the field.
+     */
+    public static Pose2d getPoseClampedToField(Pose2d pose, double additionalDistanceFromEdge) {
+        return new Pose2d(
+                new Translation2d(
+                        MathUtil.clamp(
+                                pose.getX(),
+                                additionalDistanceFromEdge,
+                                FieldConstants.fieldLength - additionalDistanceFromEdge),
+                        MathUtil.clamp(
+                                pose.getY(),
+                                additionalDistanceFromEdge,
+                                FieldConstants.fieldWidth - additionalDistanceFromEdge)),
+                pose.getRotation());
     }
 }
