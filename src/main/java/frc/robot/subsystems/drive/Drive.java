@@ -21,7 +21,6 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -52,6 +51,7 @@ import frc.robot.Constants.Mode;
 import frc.robot.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldUtil;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.LoggedTunableNumber;
 
@@ -237,18 +237,16 @@ public class Drive extends SubsystemBase {
             // Apply update
             poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
 
+            // If the pose is outside of the field clamp it back into the field (doens't account for
+            // rotational position of robot)
             Pose2d currentPose = poseEstimator.getEstimatedPosition();
-            Pose2d poseClamped =
-                    new Pose2d(
-                            new Translation2d(
-                                    MathUtil.clamp(
-                                            currentPose.getX(), 0, FieldConstants.fieldLength),
-                                    MathUtil.clamp(
-                                            currentPose.getY(), 0, FieldConstants.fieldWidth)),
-                            currentPose.getRotation());
-            if (currentPose.getX() != poseClamped.getX()
-                    || currentPose.getY() != poseClamped.getY()) {
-                poseEstimator.resetPosition(rawGyroRotation, modulePositions, poseClamped);
+            Pose2d currentPoseClamped =
+                    FieldUtil.getPoseClampedToField(currentPose, Constants.ROBOT_LENGTH/2);
+
+            // resets the position to inside the field if it is outside.
+            if (currentPose.getX() != currentPoseClamped.getX()
+                    || currentPose.getY() != currentPoseClamped.getY()) {
+                poseEstimator.resetPosition(rawGyroRotation, modulePositions, currentPoseClamped);
             }
         }
         long odometryEnd = RobotController.getFPGATime();
