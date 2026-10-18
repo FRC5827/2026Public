@@ -65,7 +65,7 @@ public class Turret extends SubsystemBase {
         this.targeting = targeting;
 
         overrideZeroingShooter =
-                new LoggedDashboardChooser<>("Override Time Restrictions", new SendableChooser<>());
+                new LoggedDashboardChooser<>("Override Zeroing Shooter", new SendableChooser<>());
         overrideZeroingShooter.addDefaultOption("False", false);
         overrideZeroingShooter.addOption("True", true);
     }
