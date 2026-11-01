@@ -18,10 +18,15 @@ Usage:
     python tools/pull_logs.py --keep 20      # keep last 20 logs on USB (default 10)
     python tools/pull_logs.py --min-free 1024 # minimum free MB on USB (default 512)
     python tools/pull_logs.py --no-match     # skip DS log matching
+    python tools/pull_logs.py --status       # print an 8x8 colored status block
+    python tools/pull_logs.py --wait-for-connection # wait for roboRIO to become available if not connected
+    python tools/pull_logs.py --wait-on-complete # wait for completion before exiting
 
 Requires: SSH access to roboRIO (built into Windows 10+)
 """
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import socket
 import subprocess
 import sys
 import os
@@ -29,6 +34,7 @@ import argparse
 import re
 import shutil
 from datetime import datetime, timedelta, timezone
+import time
 
 # ---- Configuration ----
 TEAM_NUMBER = 9997
@@ -62,6 +68,11 @@ DEFAULT_KEEP_RECENT = 10      # always keep this many recent logs on USB
 DEFAULT_MIN_FREE_MB = 1024    # start cleaning when free space drops below this
 MATCH_TOLERANCE_SECS = 120    # max seconds apart to consider a wpilog/dslog match
 
+NOT_CONNECTED_COLOR = (255, 0, 0)  # red
+DOWNLOADING_COLOR = (255, 255, 0)   # yellow
+COMPLETED_COLOR = (0, 255, 0)      # green
+STATUS_BLOCK_SIZE = 8  # 8x8 block of colored squares for status display
+
 
 def ssh_cmd(host, command, timeout=10):
     """Run a command on the roboRIO via SSH. Returns (success, stdout)."""
@@ -90,14 +101,41 @@ def scp_download(host, remote_path, local_path, timeout=120):
 
 
 def find_roborio():
-    """Try each known roboRIO address and return the first that responds."""
+    """Try all known roboRIO addresses concurrently and return the first to respond."""
     print("Searching for roboRIO...")
-    for host in ROBORIO_HOSTS:
-        ok, _ = ssh_cmd(host, "echo ok", timeout=5)
-        if ok:
-            print(f"  Connected to {host}")
-            return host
+    executor = ThreadPoolExecutor(max_workers=len(ROBORIO_HOSTS))
+    futures = {
+        executor.submit(ssh_cmd, host, "echo ok", timeout=5): host
+        for host in ROBORIO_HOSTS
+    }
+    try:
+        for future in as_completed(futures):
+            host = futures[future]
+            ok, _ = future.result()
+            if ok:
+                print(f"  Connected to {host}")
+                for pending in futures:
+                    pending.cancel()
+                return host
+    finally:
+        executor.shutdown(wait=False)
     return None
+
+
+def _ssh_port_open(host, timeout):
+    try:
+        with socket.create_connection((host, 22), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def roborio_connected(timeout=0.5):
+    """Return whether any known roboRIO address accepts an SSH connection."""
+    with ThreadPoolExecutor(max_workers=len(ROBORIO_HOSTS)) as executor:
+        return any(executor.map(
+            lambda host: _ssh_port_open(host, timeout), ROBORIO_HOSTS
+        ))
 
 
 def list_remote_logs(host):
@@ -477,6 +515,14 @@ def update_latest_dir(downloaded_filenames):
         print("  (no matching DS log found — only wpilog copied)")
 
 
+def display_status_color(Color, status_message=None):
+    color = "\033[38;2;{};{};{}m".format(*Color)
+    reset = "\033[0m"
+    for _ in range(STATUS_BLOCK_SIZE):
+        print(f"{color}{'█' * STATUS_BLOCK_SIZE*2}{reset}")
+    if status_message:
+        print(status_message)
+
 def main():
     parser = argparse.ArgumentParser(
         description="Pull AdvantageKit logs from the roboRIO USB stick."
@@ -490,16 +536,30 @@ def main():
                         help=f"Number of recent logs to always keep on USB (default {DEFAULT_KEEP_RECENT})")
     parser.add_argument("--min-free", type=int, default=DEFAULT_MIN_FREE_MB,
                         help=f"Minimum free space in MB before cleanup (default {DEFAULT_MIN_FREE_MB})")
+    parser.add_argument("--status", action="store_true", help="Print roboRIO status as a colored 8x8 block")
+    parser.add_argument("--wait-for-connection", action="store_true", help="Wait for roboRIO to become available if not connected")
     parser.add_argument("--wipe", action="store_true", help="Delete ALL logs from the roboRIO USB")
     parser.add_argument("--host", type=str, default=None,
                         help="Override roboRIO hostname/IP")
+    parser.add_argument("--wait-on-complete", action="store_true", help="Skip the completion prompt")
     args = parser.parse_args()
 
+    if args.status:
+        display_status_color(NOT_CONNECTED_COLOR, "No Connection")
+
+    if args.wait_for_connection:
+        print("Waiting for roboRIO to become available...")
+        print("Retrying every 1 second. Press Ctrl+C to abort.")
+        while not roborio_connected():
+            time.sleep(1)
+
     host = args.host if args.host else find_roborio()
-    if not host:
+    if not host :
         print("Error: Could not connect to roboRIO. Is the robot on and connected?")
         print(f"  Tried: {', '.join(ROBORIO_HOSTS)}")
         sys.exit(1)
+
+    args.status and display_status_color(DOWNLOADING_COLOR, "Connected")
 
     if args.wipe:
         do_wipe(host)
@@ -515,6 +575,11 @@ def main():
             min_free_mb=args.min_free,
             show_matches=not args.no_match,
         )
+
+    args.status and display_status_color(COMPLETED_COLOR, "Completed")
+
+    if not args.wait_on_complete:
+        input("\nComplete. Press Enter to exit...")
 
 
 if __name__ == "__main__":
