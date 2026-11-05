@@ -21,6 +21,8 @@ Usage:
     python tools/pull_logs.py --status       # print an 8x8 colored status block
     python tools/pull_logs.py --wait-for-connection # wait for roboRIO to become available if not connected
     python tools/pull_logs.py --wait-on-complete # wait for completion before exiting
+    python tools/pull_logs.py --host <hostname> # override roboRIO hostname/IP
+    python tools/pull_logs.py --help         # show this help message
 
 Requires: SSH access to roboRIO (built into Windows 10+)
 """
@@ -537,7 +539,7 @@ def main():
     parser.add_argument("--min-free", type=int, default=DEFAULT_MIN_FREE_MB,
                         help=f"Minimum free space in MB before cleanup (default {DEFAULT_MIN_FREE_MB})")
     parser.add_argument("--status", action="store_true", help="Print roboRIO status as a colored 8x8 block")
-    parser.add_argument("--wait-for-connection", action="store_true", help="Wait for roboRIO to become available if not connected")
+    parser.add_argument("--wait-for-signal", action="store_true", help="Wait for roboRIO to become available if not connected")
     parser.add_argument("--wipe", action="store_true", help="Delete ALL logs from the roboRIO USB")
     parser.add_argument("--host", type=str, default=None,
                         help="Override roboRIO hostname/IP")
