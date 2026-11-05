@@ -43,6 +43,8 @@ public class DriveCommands {
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
     private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
     private static final double SLOW_MODE_MULTIPLIER = 0.25;
+    private static final double DRIVE_LINEAR_JOYSTICK_EXPONENT = 2.0;
+    private static final double DRIVE_ROTATION_JOYSTICK_EXPONENT = 2.0;
 
     private static boolean isSlowMode = false;
 
@@ -54,7 +56,7 @@ public class DriveCommands {
         Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 
         // Square magnitude for more precise control
-        linearMagnitude = linearMagnitude * linearMagnitude;
+        linearMagnitude = Math.pow(linearMagnitude, DRIVE_LINEAR_JOYSTICK_EXPONENT);
 
         // Return new linear velocity
         return new Pose2d(Translation2d.kZero, linearDirection)
@@ -81,7 +83,7 @@ public class DriveCommands {
                     double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
 
                     // Square rotation value for more precise control
-                    omega = Math.copySign(omega * omega, omega);
+                    omega = Math.copySign(Math.pow(omega, DRIVE_ROTATION_JOYSTICK_EXPONENT), omega);
 
                     // Convert to field relative speeds & send command
                     if (isSlowMode()) {
