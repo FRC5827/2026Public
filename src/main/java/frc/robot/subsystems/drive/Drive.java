@@ -241,7 +241,7 @@ public class Drive extends SubsystemBase {
             // rotational position of robot)
             Pose2d currentPose = poseEstimator.getEstimatedPosition();
             Pose2d currentPoseClamped =
-                    FieldUtil.getPoseClampedToField(currentPose, Constants.ROBOT_LENGTH/2);
+                    FieldUtil.getPoseClampedToField(currentPose, Constants.ROBOT_LENGTH / 2);
 
             // resets the position to inside the field if it is outside.
             if (currentPose.getX() != currentPoseClamped.getX()

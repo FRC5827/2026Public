@@ -7,59 +7,21 @@
 
 package frc.robot;
 
-import static frc.robot.subsystems.vision.VisionConstants.*;
-
-import com.pathplanner.lib.auto.NamedCommands;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import frc.robot.FieldConstants.AprilTagLayoutType;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.autos.AutoChooser;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.hopper.indexer.Indexer;
-import frc.robot.subsystems.hopper.indexer.IndexerIO;
-import frc.robot.subsystems.hopper.indexer.IndexerIOSim;
-import frc.robot.subsystems.hopper.indexer.IndexerIOTalonFX;
-import frc.robot.subsystems.hopper.kicker.Kicker;
-import frc.robot.subsystems.hopper.kicker.KickerIO;
-import frc.robot.subsystems.hopper.kicker.KickerIOSim;
-import frc.robot.subsystems.hopper.kicker.KickerIOTalonFX;
-import frc.robot.subsystems.intake.deployer.Deployer;
-import frc.robot.subsystems.intake.deployer.DeployerIO;
-import frc.robot.subsystems.intake.deployer.DeployerIOSim;
-import frc.robot.subsystems.intake.deployer.DeployerIOTalonFX;
-import frc.robot.subsystems.intake.flywheel.Flywheel;
-import frc.robot.subsystems.intake.flywheel.FlywheelIO;
-import frc.robot.subsystems.intake.flywheel.FlywheelIOSim;
-import frc.robot.subsystems.intake.flywheel.FlywheelIOTalonFX;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOReal;
-import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.Targeting;
-import frc.robot.subsystems.shooter.Turret;
-import frc.robot.subsystems.shooter.TurretIO;
-import frc.robot.subsystems.shooter.TurretIOReal;
-import frc.robot.subsystems.shooter.TurretIOSim;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.FieldUtil;
 
 /**
@@ -71,19 +33,19 @@ import frc.robot.util.FieldUtil;
 public class RobotContainer {
     // Subsystems
     private final Drive drive;
-    private final Flywheel intakeFlywheel;
-    private final Targeting targeting;
-    private final Shooter shooter;
-    private final Deployer intakeDeployer;
-    private final Indexer hopperIndexer;
-    private final Kicker hopperKicker;
-    private final Turret turret;
-    private final Superstructure superstructure;
+    // private final Flywheel intakeFlywheel;
+    // private final Targeting targeting;
+    // private final Shooter shooter;
+    // private final Deployer intakeDeployer;
+    // private final Indexer hopperIndexer;
+    // private final Kicker hopperKicker;
+    // private final Turret turret;
+    // private final Superstructure superstructure;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
-    private final AutoChooser autoChooser;
+    // private final AutoChooser autoChooser;
 
     // Trench alignment detection
     private boolean wasPreviouslyAligned = false;
@@ -109,29 +71,31 @@ public class RobotContainer {
                                 new ModuleIOTalonFX(TunerConstants.BackRight));
 
                 // Initialize vision (local scope only, not stored)
-                new Vision(
-                        drive::addVisionMeasurement,
-                        new VisionIOPhotonVision(cameraFRName, robotToCameraFR),
-                        new VisionIOPhotonVision(cameraFLName, robotToCameraFL)
-                        // new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
-                        // new VisionIOPhotonVision(cameraBLName, robotToCameraBL)
-                        );
+                /*
+                                new Vision(
+                                        drive::addVisionMeasurement,
+                                        new VisionIOPhotonVision(cameraFRName, robotToCameraFR),
+                                        new VisionIOPhotonVision(cameraFLName, robotToCameraFL)
+                                        // new VisionIOPhotonVision(cameraBRName, robotToCameraBR),
+                                        // new VisionIOPhotonVision(cameraBLName, robotToCameraBL)
+                                        );
 
-                intakeDeployer = new Deployer(new DeployerIOTalonFX());
+                                intakeDeployer = new Deployer(new DeployerIOTalonFX());
 
-                intakeFlywheel = new Flywheel(new FlywheelIOTalonFX());
+                                intakeFlywheel = new Flywheel(new FlywheelIOTalonFX());
 
-                targeting = new Targeting(drive::getPose);
-                shooter = new Shooter(new ShooterIOReal(), targeting);
-                turret = new Turret(new TurretIOReal() {}, targeting);
+                                targeting = new Targeting(drive::getPose);
+                                shooter = new Shooter(new ShooterIOReal(), targeting);
+                                turret = new Turret(new TurretIOReal() {}, targeting);
 
-                hopperIndexer = new Indexer(new IndexerIOTalonFX());
-                hopperKicker = new Kicker(new KickerIOTalonFX());
-
+                                hopperIndexer = new Indexer(new IndexerIOTalonFX());
+                                hopperKicker = new Kicker(new KickerIOTalonFX());
+                */
                 break;
 
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
+
                 drive =
                         new Drive(
                                 new GyroIO() {},
@@ -139,7 +103,7 @@ public class RobotContainer {
                                 new ModuleIOSim(TunerConstants.FrontRight),
                                 new ModuleIOSim(TunerConstants.BackLeft),
                                 new ModuleIOSim(TunerConstants.BackRight));
-
+                /*
                 if (Constants.simWithVision) {
                     // Initialize vision (local scope only, not stored)
                     new Vision(
@@ -171,7 +135,7 @@ public class RobotContainer {
                 turret = new Turret(new TurretIOSim(), targeting);
 
                 hopperIndexer = new Indexer(new IndexerIOSim());
-                hopperKicker = new Kicker(new KickerIOSim());
+                hopperKicker = new Kicker(new KickerIOSim()); */
                 break;
 
             default:
@@ -183,38 +147,41 @@ public class RobotContainer {
                                 new ModuleIO() {},
                                 new ModuleIO() {});
 
-                // Initialize vision (local scope only, not stored)
-                new Vision(
-                        drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {}
-                        // new VisionIO() {},
-                        // new VisionIO() {}
-                        );
+                /*
+                               // Initialize vision (local scope only, not stored)
+                               new Vision(
+                                       drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {}
+                                       // new VisionIO() {},
+                                       // new VisionIO() {}
+                                       );
 
-                intakeDeployer = new Deployer(new DeployerIO() {});
-                intakeFlywheel = new Flywheel(new FlywheelIO() {});
+                               intakeDeployer = new Deployer(new DeployerIO() {});
+                               intakeFlywheel = new Flywheel(new FlywheelIO() {});
 
-                targeting = new Targeting(drive::getPose);
-                shooter = new Shooter(new ShooterIO() {}, targeting);
-                turret = new Turret(new TurretIO() {}, targeting);
+                               targeting = new Targeting(drive::getPose);
+                               shooter = new Shooter(new ShooterIO() {}, targeting);
+                               turret = new Turret(new TurretIO() {}, targeting);
 
-                hopperIndexer = new Indexer(new IndexerIO() {});
-                hopperKicker = new Kicker(new KickerIO() {});
-
+                               hopperIndexer = new Indexer(new IndexerIO() {});
+                               hopperKicker = new Kicker(new KickerIO() {});
+                */
                 break;
         }
 
         // Initialize superstructure
-        superstructure =
-                new Superstructure(shooter, targeting, turret, hopperKicker, hopperIndexer, drive);
+        // superstructure =
+        //        new Superstructure(shooter, targeting, turret, hopperKicker, hopperIndexer,
+        // drive);
 
         // Set up auto chooser
-        autoChooser = new AutoChooser(drive, this::registerNamedCommands);
+        // autoChooser = new AutoChooser(drive, this::registerNamedCommands);
 
         // Configure the button bindings
         configureButtonBindings();
     }
 
     private void registerNamedCommands() {
+        /*
         // Named commands are commands in PathPlanner that are given a name so they can be directly
         // used in autos in PathPlanner.
 
@@ -284,7 +251,7 @@ public class RobotContainer {
                                 intakeFlywheel.runIntake().asProxy().withName("RunIntake"))
                         .withName("NC_IntakeNoTimeout"));
         // Climb command: placeholder for future implementation
-        NamedCommands.registerCommand("Climb", Commands.print("CLIMB!").withName("NC_Climb"));
+        NamedCommands.registerCommand("Climb", Commands.print("CLIMB!").withName("NC_Climb")); */
     }
 
     /**
@@ -293,7 +260,9 @@ public class RobotContainer {
      * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
      * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
+    /* */
     private void configureButtonBindings() {
+
         // Default command, normal field-relative drive
         drive.setDefaultCommand(
                 DriveCommands.joystickDrive(
@@ -302,7 +271,7 @@ public class RobotContainer {
                                 () -> -controller.getLeftX(),
                                 () -> -controller.getRightX())
                         .withName("Drive_JoystickDrive_Default"));
-
+        /*
         // Lock to 0° when A button is held
         controller
                 .a()
@@ -401,7 +370,7 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // return Commands.parallel(intakeDeployer.liftDeployer(), new PathPlannerAuto("test"));
-        return autoChooser.get();
+        return Commands.runOnce(() -> {});
         // return new PathPlannerAuto("Left Trench to Shoot to Depot");
     }
 
@@ -429,12 +398,12 @@ public class RobotContainer {
     }
 
     public void enable() {
-        turret.setBrakeMode(true);
-        intakeDeployer.setBrakeMode(true);
+        // turret.setBrakeMode(true);
+        // intakeDeployer.setBrakeMode(true);
     }
 
     public void disable() {
-        turret.setBrakeMode(false);
-        intakeDeployer.setBrakeMode(false);
+        // turret.setBrakeMode(false);
+        // intakeDeployer.setBrakeMode(false);
     }
 }
